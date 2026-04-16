@@ -1,6 +1,6 @@
 {
   "name": "create-meno-app",
-  "version": "1.0.3",
+  "version": "1.1.0",
   "description": "CLI tool to scaffold a production-ready MENO (MongoDB, Express, Node.js) boilerplate",
   "type": "module",
   "bin": {
