@@ -1,13 +1,13 @@
 # create-meno-app
 
-> Production-ready **MongoDB · Express · Node.js** boilerplate generator.
-> Scaffold a full backend in seconds, not hours.
+Production-ready **MongoDB · Express · Node.js** boilerplate generator.
+Scaffold a full backend in seconds, not hours.
 
 ```bash
 npx create-meno-app my-api
 ```
 
----
+![create-meno-app](.github/create-meno-app.png)
 
 ## Features
 
