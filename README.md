@@ -1,5 +1,10 @@
 # create-meno-app
 
+[![npm version](https://img.shields.io/npm/v/create-meno-app.svg)](https://www.npmjs.com/package/create-meno-app)
+[![npm downloads](https://img.shields.io/npm/dm/create-meno-app.svg)](https://www.npmjs.com/package/create-meno-app)
+[![node](https://img.shields.io/node/v/create-meno-app.svg)](https://www.npmjs.com/package/create-meno-app)
+[![license](https://img.shields.io/npm/l/create-meno-app.svg)](LICENSE)
+
 Production-ready **MongoDB · Express · Node.js** boilerplate generator.
 Scaffold a full backend in seconds, not hours.
 
@@ -7,7 +12,10 @@ Scaffold a full backend in seconds, not hours.
 npx create-meno-app my-api
 ```
 
-![create-meno-app](.github/create-meno-app.png)
+> 📦 [**create-meno-app** on npm](https://www.npmjs.com/package/create-meno-app)
+
+[![](assets/logo.png)](assets/logo.png)
+[![](assets/cli.png)](assets/cli.png)
 
 ## Features
 

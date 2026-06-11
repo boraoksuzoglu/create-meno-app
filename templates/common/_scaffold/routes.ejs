@@ -1,0 +1,19 @@
+import express from 'express';
+import * as ctrl from './<%= name %>.controller.js';
+import { create<%= pascal %>Schema, update<%= pascal %>Schema } from './<%= name %>.validation.js';
+import { validateBody } from '@/middlewares/validation.middleware.js';
+
+const router = express.Router();
+
+// @doc List <%= name %>s
+router.get('/',    ctrl.list);
+// @doc Get <%= name %> by ID
+router.get('/:id', ctrl.getOne);
+// @doc Create <%= name %> | 201
+router.post(  '/',    validateBody(create<%= pascal %>Schema), ctrl.create);
+// @doc Update <%= name %>
+router.put(   '/:id', validateBody(update<%= pascal %>Schema), ctrl.update);
+// @doc Delete <%= name %>
+router.delete('/:id', ctrl.remove);
+
+export default router;

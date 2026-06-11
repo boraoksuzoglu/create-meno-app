@@ -4,7 +4,20 @@ export default [
   js.configs.recommended,
   {
     files: ['lib/**/*.js', 'bin/**/*.js'],
-    languageOptions: { ecmaVersion: 'latest', sourceType: 'module' },
+    languageOptions: {
+      ecmaVersion: 'latest',
+      sourceType: 'module',
+      globals: {
+        process: 'readonly',
+        console: 'readonly',
+        Buffer: 'readonly',
+        URL: 'readonly',
+        setTimeout: 'readonly',
+        clearTimeout: 'readonly',
+        __dirname: 'readonly',
+        __filename: 'readonly',
+      },
+    },
     rules: {
       'no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
       'no-console': 'off',

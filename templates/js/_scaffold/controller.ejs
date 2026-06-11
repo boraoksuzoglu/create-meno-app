@@ -1,0 +1,10 @@
+import * as <%= camel %>Service from './<%= name %>.service.js';
+
+// Plain async functions.
+// The route loader automatically wraps all async handlers — no manual wrapping needed.
+
+export const list   = async (req, res) => res.json(await <%= camel %>Service.list<%= pascal %>s(req.query));
+export const getOne = async (req, res) => res.json(await <%= camel %>Service.get<%= pascal %>ById(req.params.id));
+export const create = async (req, res) => res.status(201).json(await <%= camel %>Service.create<%= pascal %>(req.body));
+export const update = async (req, res) => res.json(await <%= camel %>Service.update<%= pascal %>(req.params.id, req.body));
+export const remove = async (req, res) => res.json(await <%= camel %>Service.delete<%= pascal %>(req.params.id));

@@ -3,5 +3,8 @@ test-output/
 test-integration-output/
 test-final-output/
 test-swagger-output/
+test/__snapshots__/
+test/__output__/
+test/.tmp/
 *.log
 .DS_Store

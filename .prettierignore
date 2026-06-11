@@ -2,3 +2,12 @@ node_modules/
 test-output/
 test-integration-output/
 package-lock.json
+
+# Generated-project templates are hand-formatted (and contain EJS tags / .hbs);
+# Prettier must not rewrite them.
+templates/
+
+# Throwaway verification artifacts
+test/__snapshots__/
+test/__output__/
+test/.tmp/

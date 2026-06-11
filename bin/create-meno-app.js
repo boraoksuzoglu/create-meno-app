@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-/* global process */
 
 const command = process.argv[2];
 

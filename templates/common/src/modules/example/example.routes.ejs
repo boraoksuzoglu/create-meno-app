@@ -1,0 +1,22 @@
+import express from 'express';
+import * as ctrl from './example.controller.js';
+import { createExampleSchema, updateExampleSchema } from './example.validation.js';
+import { validateBody } from '@/middlewares/validation.middleware.js';
+<% if (includeAuth) { -%>
+import { isAuthenticated } from '@/middlewares/auth.middleware.js';
+<% } -%>
+
+const router = express.Router();
+
+// @doc List examples
+router.get('/',    ctrl.list);
+// @doc Get example by ID
+router.get('/:id', ctrl.getOne);
+// @doc Create example | 201
+router.post(  '/',    <% if (includeAuth) { %>isAuthenticated, <% } %>validateBody(createExampleSchema), ctrl.create);
+// @doc Update example
+router.put(   '/:id', <% if (includeAuth) { %>isAuthenticated, <% } %>validateBody(updateExampleSchema), ctrl.update);
+// @doc Delete example
+router.delete('/:id', <% if (includeAuth) { %>isAuthenticated, <% } %>ctrl.remove);
+
+export default router;

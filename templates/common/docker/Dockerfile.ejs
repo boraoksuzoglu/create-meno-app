@@ -1,0 +1,39 @@
+# ── Build stage (TypeScript only) ────────────────────────────────────────────
+<% if (isTs) { -%>
+FROM node:20-alpine AS builder
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci
+COPY . .
+RUN npm run build
+
+# ── Production stage ──────────────────────────────────────────────────────────
+FROM node:20-alpine AS runner
+<% } else { -%>
+FROM node:20-alpine
+<% } -%>
+WORKDIR /app
+
+# Install production deps only
+COPY package*.json ./
+RUN npm ci --omit=dev && npm cache clean --force
+
+<% if (isTs) { -%>
+COPY --from=builder /app/dist ./dist
+<% } else { -%>
+COPY src ./src
+<% } -%>
+
+# Non-root user for security
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+USER appuser
+
+EXPOSE 3000
+
+# Graceful shutdown is handled in code — SIGTERM will trigger clean exit
+STOPSIGNAL SIGTERM
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+  CMD wget -qO- http://localhost:3000/health || exit 1
+
+CMD ["node", <% if (isTs) { %>"dist/server.js"<% } else { %>"--import", "./src/utils/path-loader.js", "src/server.js"<% } %>]

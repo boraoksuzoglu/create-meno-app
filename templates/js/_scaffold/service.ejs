@@ -1,0 +1,35 @@
+import createError from 'http-errors';
+import <%= pascal %> from '@/models/<%= name %>.model.js';
+import { paginate, paginatedResponse } from '@/utils/paginate.js';
+
+export const list<%= pascal %>s = async (query = {}) => {
+  const { page, limit, skip } = paginate(query);
+  const [items, total] = await Promise.all([
+    <%= pascal %>.find({ isActive: true }).skip(skip).limit(limit).sort({ createdAt: -1 }),
+    <%= pascal %>.countDocuments({ isActive: true }),
+  ]);
+  return paginatedResponse(items, total, page, limit);
+};
+
+export const get<%= pascal %>ById = async (id) => {
+  const item = await <%= pascal %>.findById(id);
+  if (!item) throw createError(404, '<%= name.toUpperCase() %>_NOT_FOUND');
+  return { item };
+};
+
+export const create<%= pascal %> = async (data) => {
+  const item = await <%= pascal %>.create(data);
+  return { item };
+};
+
+export const update<%= pascal %> = async (id, data) => {
+  const item = await <%= pascal %>.findByIdAndUpdate(id, { $set: data }, { new: true, runValidators: true });
+  if (!item) throw createError(404, '<%= name.toUpperCase() %>_NOT_FOUND');
+  return { item };
+};
+
+export const delete<%= pascal %> = async (id) => {
+  const item = await <%= pascal %>.findByIdAndDelete(id);
+  if (!item) throw createError(404, '<%= name.toUpperCase() %>_NOT_FOUND');
+  return { message: 'DELETED' };
+};
