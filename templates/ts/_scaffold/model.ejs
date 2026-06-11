@@ -1,0 +1,16 @@
+import mongoose, { Document } from 'mongoose';
+
+export interface I<%= pascal %> extends Document {
+  name: string;
+  isActive: boolean;
+}
+
+const <%= name %>Schema = new mongoose.Schema<I<%= pascal %>>(
+  {
+    name:     { type: String, required: true, trim: true },
+    isActive: { type: Boolean, default: true },
+  },
+  { timestamps: true }
+);
+
+export default mongoose.model<I<%= pascal %>>('<%= pascal %>', <%= name %>Schema);

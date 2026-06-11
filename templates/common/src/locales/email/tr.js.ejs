@@ -1,0 +1,48 @@
+/**
+ * Turkish email translations
+ */
+export const tr = {
+  subjects: {
+    welcome: (name<%= isTs ? ': string' : '' %>) => `Hoş geldiniz, ${name}!`,
+<% if (includeAuth) { -%>
+    forgotPassword: () => 'Şifrenizi sıfırlayın',
+    passwordChanged: () => 'Şifreniz değiştirildi',
+<% } -%>
+  },
+
+  common: {
+    greeting: 'Merhaba,',
+    teamSignature: 'İyi çalışmalar dileriz,',
+    teamName: 'Ekibimiz',
+    copyright: 'Tüm hakları saklıdır.',
+    sentToPrefix: 'Bu e-posta',
+    sentToSuffix: ' adresine gönderilmiştir.',
+  },
+
+  welcome: {
+    title: 'Hoş Geldiniz!',
+    subtitle: 'Hesabınız oluşturuldu',
+    body: 'Kayıt olduğunuz için teşekkürler. Hesabınız kullanıma hazır.',
+    buttonText: 'Başlayın →',
+  },
+<% if (includeAuth) { -%>
+
+  forgotPassword: {
+    title: 'Şifrenizi Sıfırlayın',
+    subtitle: 'Şifre sıfırlama talebi',
+    body: 'Şifrenizi sıfırlamak için bir talep aldık. Yeni şifrenizi belirlemek için aşağıdaki butona tıklayın.',
+    buttonText: 'Şifreyi Sıfırla →',
+    expiryNote: 'Bu bağlantı 1 saat içinde geçerliliğini yitirir.',
+    ignoreNote: 'Bu talebi siz yapmadıysanız bu e-postayı güvenle görmezden gelebilirsiniz.',
+  },
+
+  passwordChanged: {
+    title: 'Şifre Değiştirildi',
+    subtitle: 'Şifreniz güncellendi',
+    body: 'Şifreniz başarıyla değiştirildi. Bu değişikliği siz yapmadıysanız lütfen hemen destek ekibiyle iletişime geçin.',
+    buttonText: "Dashboard'a Git →",
+  },
+<% } -%>
+};
+
+export default tr;

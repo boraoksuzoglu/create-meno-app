@@ -1,0 +1,77 @@
+import rateLimit from 'express-rate-limit';
+<% if (rateLimitStore === 'mongo') { -%>
+import MongoStore from 'rate-limit-mongo';
+import { config as appConfig } from '@/config/config.js';
+<% } else if (rateLimitStore === 'redis') { -%>
+import { RedisStore } from 'rate-limit-redis';
+import { createClient } from 'redis';
+import { config as appConfig } from '@/config/config.js';
+
+const redisClient = createClient({ url: process.env.REDIS_URL || 'redis://localhost:6379' });
+redisClient.connect().catch(console.error);
+<% } else { -%>
+import { config as appConfig } from '@/config/config.js';
+<% } -%>
+
+// Skip rate limiting in test environment
+const skipInTest = () => appConfig.app.isTest;
+<% if (rateLimitStore === 'mongo') { -%>
+
+// Shared store instance — avoids opening multiple DB connections
+const mongoStore = new MongoStore({
+  uri: appConfig.db.uri,
+  collectionName: 'rate_limits',
+  expireTimeMs: 60 * 60 * 1000, // TTL covers the longest window (1h upload limit)
+});
+<% } else if (rateLimitStore === 'redis') { -%>
+
+const createRedisStore = (prefix: string) => new RedisStore({
+  prefix,
+  sendCommand: (...args: string[]) => redisClient.sendCommand(args),
+});
+<% } -%>
+
+/** General API rate limit: 200 req / 1 min */
+export const rateLimitGeneral = rateLimit({
+  windowMs: 60 * 1000,
+  max: 200,
+  message: 'TOO_MANY_REQUESTS',
+  standardHeaders: true,
+  legacyHeaders: false,
+  skip: skipInTest,
+<% if (rateLimitStore === 'mongo') { -%>
+  store: mongoStore,
+<% } else if (rateLimitStore === 'redis') { -%>
+  store: createRedisStore('rl:general:'),
+<% } -%>
+});
+
+/** Auth endpoints: 10 req / 15 min */
+export const rateLimitAuth = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  message: 'TOO_MANY_LOGIN_ATTEMPTS',
+  standardHeaders: true,
+  legacyHeaders: false,
+  skip: skipInTest,
+<% if (rateLimitStore === 'mongo') { -%>
+  store: mongoStore,
+<% } else if (rateLimitStore === 'redis') { -%>
+  store: createRedisStore('rl:auth:'),
+<% } -%>
+});
+
+/** Upload endpoints: 20 req / 1 hour */
+export const rateLimitUpload = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 20,
+  message: 'TOO_MANY_UPLOAD_REQUESTS',
+  standardHeaders: true,
+  legacyHeaders: false,
+  skip: skipInTest,
+<% if (rateLimitStore === 'mongo') { -%>
+  store: mongoStore,
+<% } else if (rateLimitStore === 'redis') { -%>
+  store: createRedisStore('rl:upload:'),
+<% } -%>
+});

@@ -1,0 +1,53 @@
+import Joi from 'joi';
+
+// Password must be at least 8 chars and contain uppercase, lowercase, and a digit (NIST SP 800-63B+)
+const passwordRule = Joi.string()
+  .min(8)
+  .pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/)
+  .required()
+  .messages({
+    'any.required': 'MISSING_REQUIRED_FIELD',
+    'string.min': 'PASSWORD_TOO_SHORT',
+    'string.pattern.base': 'PASSWORD_TOO_WEAK',
+  });
+
+export const registerSchema = Joi.object({
+  email: Joi.string().email().required().messages({
+    'any.required': 'MISSING_REQUIRED_FIELD',
+    'string.email': 'INVALID_EMAIL',
+  }),
+  password: passwordRule,
+  confirmPassword: Joi.string().valid(Joi.ref('password')).required().messages({
+    'any.only': 'PASSWORD_MISMATCH',
+    'any.required': 'MISSING_REQUIRED_FIELD',
+  }),
+});
+
+export const loginSchema = Joi.object({
+  email: Joi.string().email().required(),
+  password: Joi.string().min(8).required(),
+});
+
+export const updateProfileSchema = Joi.object({
+  name: Joi.string().trim().max(100).allow(null, '').optional(),
+});
+
+export const changePasswordSchema = Joi.object({
+  currentPassword: Joi.string().min(8).required(),
+  newPassword: passwordRule,
+  confirmNewPassword: Joi.string().valid(Joi.ref('newPassword')).required().messages({
+    'any.only': 'PASSWORDS_DO_NOT_MATCH',
+  }),
+});
+
+export const forgotPasswordSchema = Joi.object({
+  email: Joi.string().email().required(),
+});
+
+export const resetPasswordSchema = Joi.object({
+  token: Joi.string().required(),
+  newPassword: passwordRule,
+  confirmNewPassword: Joi.string().valid(Joi.ref('newPassword')).required().messages({
+    'any.only': 'PASSWORDS_DO_NOT_MATCH',
+  }),
+});

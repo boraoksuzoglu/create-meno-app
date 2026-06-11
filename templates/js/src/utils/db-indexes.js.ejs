@@ -1,0 +1,76 @@
+import mongoose from 'mongoose';
+<% if (includeLogger) { -%>
+import logger from '@/utils/logger.js';
+<% } -%>
+
+/**
+ * ensureIndexes
+ * ─────────────
+ * Calls syncIndexes() on every registered Mongoose model at startup.
+ *
+ * Why:
+ *  - Mongoose does NOT automatically sync indexes in production.
+ *  - Missing indexes cause slow queries and failed unique constraints.
+ *  - This runs once at startup and logs what it finds.
+ *
+ * ⚠ WARNING — syncIndexes() drops any indexes that exist in MongoDB but are
+ *   NOT defined in the Mongoose schema. On large collections this may cause
+ *   temporary query degradation while indexes are rebuilt.
+ *   Alternative: use model.createIndexes() to only ADD missing indexes
+ *   without dropping existing ones.
+ *
+ * When to call:
+ *   Call this AFTER databaseConnection.connect() in server.js.
+ *   It is intentionally non-blocking — a failure here logs a warning
+ *   but does NOT crash the server.
+ *
+ * Usage:
+ *   import { ensureIndexes } from '@/utils/db-indexes.js';
+ *   await ensureIndexes();
+ */
+export const ensureIndexes = async () => {
+  const modelNames = mongoose.modelNames();
+
+  if (modelNames.length === 0) {
+<% if (includeLogger) { -%>
+    logger.warn('NO_MODELS_REGISTERED', {});
+<% } else { -%>
+    console.warn('[DB] NO_MODELS_REGISTERED');
+<% } -%>
+    return;
+  }
+
+<% if (includeLogger) { -%>
+  logger.info('SYNCING_INDEXES', { models: modelNames });
+<% } else { -%>
+  console.log('[DB] SYNCING_INDEXES');
+<% } -%>
+
+  const results = await Promise.allSettled(
+    modelNames.map(async (name) => {
+      const model = mongoose.model(name);
+      await model.syncIndexes();
+      return name;
+    })
+  );
+
+  const succeeded = results.filter((r) => r.status === 'fulfilled').map((r) => r.value);
+  const failed    = results.filter((r) => r.status === 'rejected');
+
+  if (succeeded.length > 0) {
+<% if (includeLogger) { -%>
+    logger.info('INDEXES_SYNCED', { models: succeeded });
+<% } else { -%>
+    console.log('[DB] INDEXES_SYNCED');
+<% } -%>
+  }
+
+  for (const result of failed) {
+    const reason = result.reason;
+<% if (includeLogger) { -%>
+    logger.error('INDEX_SYNC_FAILED', { error: reason?.message ?? String(reason) });
+<% } else { -%>
+    console.error('[DB] INDEX_SYNC_FAILED');
+<% } -%>
+  }
+};

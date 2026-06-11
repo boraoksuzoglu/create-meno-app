@@ -1,0 +1,21 @@
+import express from 'express';
+import session from 'express-session';
+import cookieParser from 'cookie-parser';
+import { notFound, errorHandler } from '@/middlewares/error.middleware.js';
+import { loadRoutes } from '@/utils/route-loader.js';
+
+/**
+ * Builds an Express app wired exactly like the real server (auto-loaded routes
+ * with automatic async-error wrapping), minus the network listen + DB connect.
+ * Async because the route loader imports modules dynamically.
+ */
+export async function buildApp() {
+  const app = express();
+  app.use(express.json());
+  app.use(cookieParser());
+  app.use(session({ secret: 'test-secret', resave: false, saveUninitialized: false }));
+  await loadRoutes(app);
+  app.use(notFound);
+  app.use(errorHandler);
+  return app;
+}

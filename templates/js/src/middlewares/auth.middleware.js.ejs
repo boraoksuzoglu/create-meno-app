@@ -1,0 +1,28 @@
+import createError from 'http-errors';
+
+/**
+ * Ensures the request has an active session.
+ */
+export const isAuthenticated = (req, res, next) => {
+  if (req.session?.userId) {
+    req.userId = req.session.userId;
+    return next();
+  }
+  throw createError(401, 'UNAUTHORIZED');
+};
+<% if (includeRbac) { -%>
+
+/**
+ * Role-based access control middleware.
+ * Usage: router.get('/admin', isAuthenticated, hasRole(['admin']), handler)
+ */
+export const hasRole = (allowedRoles) => {
+  return (req, res, next) => {
+    const userRole = req.session?.user?.role;
+    if (!userRole || !allowedRoles.includes(userRole)) {
+      throw createError(403, 'FORBIDDEN');
+    }
+    next();
+  };
+};
+<% } -%>

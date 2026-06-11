@@ -7,12 +7,15 @@
     "create-meno-app": "./bin/create-meno-app.js"
   },
   "files": [
+    "assets/",
     "bin/",
     "lib/",
+    "templates/",
     "README.md",
     "LICENSE"
   ],
   "scripts": {
+    "test": "node --test test/*.test.mjs",
     "lint": "eslint lib/**/*.js bin/**/*.js",
     "lint:fix": "eslint lib/**/*.js bin/**/*.js --fix",
     "format": "prettier --write .",
@@ -28,6 +31,7 @@
   },
   "dependencies": {
     "chalk": "^5.3.0",
+    "ejs": "^3.1.10",
     "inquirer": "^9.2.12",
     "ora": "^7.0.1"
   },
