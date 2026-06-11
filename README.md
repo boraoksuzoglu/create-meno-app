@@ -7,7 +7,8 @@ Scaffold a full backend in seconds, not hours.
 npx create-meno-app my-api
 ```
 
-![create-meno-app](.github/create-meno-app.png)
+[![](assets/logo.png)](assets/logo.png)
+[![](assets/cli.png)](assets/cli.png)
 
 ## Features
 
