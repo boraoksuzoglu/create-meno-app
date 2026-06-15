@@ -10,3 +10,8 @@ export const updateExampleSchema = Joi.object({
   description: Joi.string().trim().allow('').optional(),
   isActive: Joi.boolean().optional(),
 });
+
+export const listExampleSchema = Joi.object({
+  page: Joi.number().integer().min(1).optional(),
+  limit: Joi.number().integer().min(1).max(100).optional(),
+});

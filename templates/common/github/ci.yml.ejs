@@ -30,6 +30,13 @@ jobs:
 <% } -%>
       - name: Security audit
         run: npm audit --audit-level=high
+<% if (includeMdDocs) { -%>
+
+      # Fails if committed docs/ is stale. Passes (skips) until you first run
+      # `npm run docs` and commit the docs/ folder.
+      - name: Check docs are up to date
+        run: npm run docs -- --check
+<% } -%>
 <% if (includeJest) { -%>
 
       - name: Run tests

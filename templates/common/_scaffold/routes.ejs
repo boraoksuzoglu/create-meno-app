@@ -1,12 +1,12 @@
 import express from 'express';
 import * as ctrl from './<%= name %>.controller.js';
-import { create<%= pascal %>Schema, update<%= pascal %>Schema } from './<%= name %>.validation.js';
-import { validateBody } from '@/middlewares/validation.middleware.js';
+import { create<%= pascal %>Schema, update<%= pascal %>Schema, list<%= pascal %>Schema } from './<%= name %>.validation.js';
+import { validateBody, validateQuery } from '@/middlewares/validation.middleware.js';
 
 const router = express.Router();
 
 // @doc List <%= name %>s
-router.get('/',    ctrl.list);
+router.get('/',    validateQuery(list<%= pascal %>Schema), ctrl.list);
 // @doc Get <%= name %> by ID
 router.get('/:id', ctrl.getOne);
 // @doc Create <%= name %> | 201

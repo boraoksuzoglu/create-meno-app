@@ -51,6 +51,8 @@ for (const [name, config] of Object.entries(scenarios)) {
         [config.includeRateLimit, `src/middlewares/ratelimit.middleware.${ext}`],
         [config.includeLogger, `src/utils/logger.${ext}`],
         [config.includeSwagger, `src/utils/swagger.${ext}`],
+        [config.includeMdDocs, `src/scripts/generate-docs.${ext}`],
+        [config.includeSwagger || config.includeMdDocs, `src/utils/doc-introspect.${ext}`],
         [config.includeUpload, `src/utils/upload.${ext}`],
         [config.includeEmail, `src/services/email/email.service.${ext}`],
         [config.includeJest, 'jest.config.js'],

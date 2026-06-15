@@ -19,6 +19,9 @@
 <% if (includeSwagger) { -%>
 - **API Docs:** Swagger UI at `GET /docs` — auto-generated from `@doc` comments
 <% } -%>
+<% if (includeMdDocs) { -%>
+- **Markdown Docs:** `npm run docs` → `docs/` — auto-discovered from source
+<% } -%>
 
 ---
 
@@ -142,6 +145,30 @@ npm run generate -- --list         # list existing modules
 ```
 
 ---
+<% if (includeMdDocs) { -%>
+
+### Generating Markdown Docs
+
+`npm run docs` regenerates `docs/` (per-module + per-model pages) by scanning source.
+**Request bodies and query params are auto-derived** from the Joi schemas referenced by
+`validateBody(...)` / `validateQuery(...)`, and **responses are inferred** from the
+controller → service → model chain (single → `{ item }`, list → paginated, etc.). So you
+normally write only `@doc` + an optional `@desc`:
+
+```<%= ext %>
+// @doc Create example | 201
+// @desc Creates a new example and returns it.
+router.post('/', validateBody(createExampleSchema), ctrl.create);
+```
+
+Overrides (only when inference can't reach): `// @body <json>`, `// @query <text>`,
+`// @response <code> <json>`. The shared engine in `src/utils/doc-introspect.<%= ext %>` powers
+both `npm run docs` and the Swagger UI, so they never drift. Run `npm run docs -- --check`
+in CI to fail when docs are stale. Models need no annotation — fields, enums, `ref`
+relationships and indexes come from the Mongoose schema.
+
+---
+<% } -%>
 
 ### Built-in Endpoints
 
