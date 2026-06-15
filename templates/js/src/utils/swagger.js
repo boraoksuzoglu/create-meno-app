@@ -3,6 +3,12 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { config } from '@/config/config.js';
+import {
+  parseRouteFile,
+  resolveValidationSchema,
+  joiToSchema,
+  inferResponseExample,
+} from '@/utils/doc-introspect.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -12,143 +18,22 @@ const __dirname = path.dirname(__filename);
  * ─────────────
  * Scans all *.routes.js files and builds OpenAPI paths automatically.
  *
- * How to document a route:
- *   Add a comment starting with "// @doc" on the line ABOVE the route:
+ * Request body & query params are derived from the Joi schemas referenced by
+ * validateBody(...) / validateQuery(...). Response examples are inferred from the
+ * controller → service → model chain. None of this needs hand-written examples —
+ * see src/utils/doc-introspect.js (shared with `npm run docs`).
  *
- *     // @doc List all products
- *     router.get("/", ctrl.list);
- *
- *     // @doc Create a product | 201
- *     router.post("/", validateBody(createProductSchema), ctrl.create);
- *
- * Format:  // @doc <summary> [| <successStatusCode>]
- *
- * The system automatically:
- *   - Detects HTTP method and path from the router call
- *   - Extracts Joi validation schemas for request body/query docs
- *   - Converts Joi schemas to OpenAPI schema objects
- *   - Groups routes by module name as tags
- *   - Detects :param path parameters
- *   - Detects isAuthenticated middleware for security requirements
+ * Annotations (all optional except @doc):
+ *   // @doc <summary> [| <successStatusCode>]   ← include the route in the docs
+ *   // @desc <description>
+ *   // @response <code> <text|json>             ← overrides the inferred response
  *
  * Routes WITHOUT @doc are excluded from the docs.
  */
 
-// ── Joi to OpenAPI converter ──────────────────────────────────────────────────
-
-const joiTypeMap = {
-  string:  { type: 'string' },
-  number:  { type: 'number' },
-  boolean: { type: 'boolean' },
-  date:    { type: 'string', format: 'date-time' },
-  array:   { type: 'array' },
-  object:  { type: 'object' },
-};
-
-const joiToOpenApi = (joiSchema) => {
-  if (!joiSchema || !joiSchema.describe) return null;
-  try { return joiDescToOpenApi(joiSchema.describe()); }
-  catch { return null; }
-};
-
-const joiDescToOpenApi = (desc) => {
-  if (!desc) return { type: 'object' };
-
-  if (desc.type === "object" && desc.keys) {
-    const properties = {};
-    const required = [];
-    for (const [key, child] of Object.entries(desc.keys)) {
-      properties[key] = joiDescToOpenApi(child);
-      const flags = (child).flags || {};
-      if (flags.presence === 'required') required.push(key);
-    }
-    return {
-      type: 'object',
-      ...(Object.keys(properties).length ? { properties } : {}),
-      ...(required.length ? { required } : {}),
-    };
-  }
-
-  const base = joiTypeMap[desc.type] || { type: 'string' };
-  const result = { ...base };
-  if (desc.rules) {
-    for (const rule of desc.rules) {
-      if (rule.name === 'email') result.format = 'email';
-      if (rule.name === 'min') result.minLength = rule.args?.limit;
-      if (rule.name === 'max') result.maxLength = rule.args?.limit;
-    }
-  }
-  if (desc.allow && desc.allow.length > 0) {
-    const filtered = desc.allow.filter((v) => v !== "" && v !== null);
-    if (filtered.length > 0) result.enum = filtered;
-  }
-  return result;
-};
-
-// ── Route file parser ──────────────────────────────────────────────────────────
-
-const parseRouteFile = (filePath) => {
-  const content = fs.readFileSync(filePath, 'utf8');
-  const lines = content.split('\n');
-  const endpoints = [];
-
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i].trim();
-    if (!line.startsWith('// @doc')) continue;
-
-    const docContent = line.replace('// @doc', '').trim();
-    const [summary, statusStr] = docContent.split('|').map((s) => s.trim());
-    const status = statusStr ? parseInt(statusStr, 10) : undefined;
-
-    for (let j = i + 1; j < lines.length; j++) {
-      const nextLine = lines[j].trim();
-      if (!nextLine || nextLine.startsWith('//')) continue;
-
-      const routeMatch = nextLine.match(
-        /router\.(get|post|put|patch|delete)\(\s*['"`]([^'"`]+)['"`]/i
-      );
-
-      if (routeMatch) {
-        const method = routeMatch[1].toLowerCase();
-        const routePath = routeMatch[2];
-        const hasAuth = nextLine.includes('isAuthenticated');
-
-        let validationVar = null;
-        let validationType = null;
-        const bodyMatch = nextLine.match(/validateBody\(\s*(\w+)/);
-        const queryMatch = nextLine.match(/validateQuery\(\s*(\w+)/);
-        if (bodyMatch) { validationVar = bodyMatch[1]; validationType = 'body'; }
-        else if (queryMatch) { validationVar = queryMatch[1]; validationType = 'query'; }
-
-        endpoints.push({
-          method, path: routePath,
-          summary: summary || `${method.toUpperCase()} ${routePath}`,
-          status: status || (method === 'post' ? 201 : 200),
-          hasAuth, validationVar, validationType,
-        });
-      }
-      break;
-    }
-  }
-  return endpoints;
-};
-
-// ── Validation schema resolver ─────────────────────────────────────────────────
-
-const resolveValidationSchema = async (moduleDir, moduleName, varName) => {
-  try {
-    const valFile = path.join(moduleDir, `${moduleName}.validation.js`);
-    if (!fs.existsSync(valFile)) return null;
-    const { pathToFileURL } = await import('url');
-    const mod = await import(pathToFileURL(valFile).href);
-    return mod[varName] || null;
-  } catch { return null; }
-};
-
-// ── Build OpenAPI document ────────────────────────────────────────────────────
-
 const buildSwaggerDoc = async () => {
   const modulesDir = path.join(__dirname, '../modules');
+  const modelsDir = path.join(__dirname, '../models');
   const paths = {};
   const tags = [];
 
@@ -168,57 +53,94 @@ const buildSwaggerDoc = async () => {
     const tagName = moduleName.charAt(0).toUpperCase() + moduleName.slice(1);
     tags.push({ name: tagName, description: `${tagName} endpoints` });
 
-    for (const ep of endpoints) {
-      const fullPath = `/${moduleName}${ep.path === '/' ? '' : ep.path}`
-        .replace(/:([a-zA-Z]+)/g, '{$1}');
+    const valFile = path.join(moduleDir, `${moduleName}.validation.js`);
 
+    for (const ep of endpoints) {
+      const fullPath = `/${moduleName}${ep.path === '/' ? '' : ep.path}`.replace(
+        /:([a-zA-Z]+)/g,
+        '{$1}'
+      );
       if (!paths[fullPath]) paths[fullPath] = {};
+
+      const descParts = [];
+      if (ep.desc) descParts.push(ep.desc);
+      if (ep.roles.length) descParts.push(`Requires role: ${ep.roles.join(', ')}`);
 
       const operation = {
         tags: [tagName],
         summary: ep.summary,
-        responses: {
-          [ep.status]: { description: 'Success' },
-          ...(ep.hasAuth ? { 401: { description: 'Unauthorized' } } : {}),
-        },
+        ...(descParts.length ? { description: descParts.join(' — ') } : {}),
+        responses: {},
       };
 
       if (ep.hasAuth) operation.security = [{ cookieAuth: [] }];
 
+      // ── Path params ──────────────────────────────────────────────────────
       const paramMatches = ep.path.match(/:([a-zA-Z]+)/g);
       if (paramMatches) {
         operation.parameters = paramMatches.map((p) => ({
-          name: p.replace(':', ''), in: 'path', required: true, schema: { type: 'string' },
+          name: p.replace(':', ''),
+          in: 'path',
+          required: true,
+          schema: { type: 'string' },
         }));
       }
 
-      if (ep.validationVar) {
-        const joiSchema = await resolveValidationSchema(moduleDir, moduleName, ep.validationVar);
-        const openApiSchema = joiToOpenApi(joiSchema);
-        if (openApiSchema && ep.validationType === 'body') {
+      // ── Request body (from Joi) ──────────────────────────────────────────
+      if (ep.bodyVar) {
+        const schema = joiToSchema(await resolveValidationSchema(valFile, ep.bodyVar));
+        if (schema) {
           operation.requestBody = {
-            required: true, content: { 'application/json': { schema: openApiSchema } },
+            required: true,
+            content: { 'application/json': { schema } },
           };
-        } else if (openApiSchema && ep.validationType === 'query' && openApiSchema.properties) {
+        }
+      }
+
+      // ── Query params (from Joi) ──────────────────────────────────────────
+      if (ep.queryVar) {
+        const schema = joiToSchema(await resolveValidationSchema(valFile, ep.queryVar));
+        if (schema && schema.properties) {
           operation.parameters = [
             ...(operation.parameters || []),
-            ...Object.entries(openApiSchema.properties).map(([pName, schema]) => ({
-              name: pName, in: 'query',
-              required: (openApiSchema.required || []).includes(pName),
-              schema,
+            ...Object.entries(schema.properties).map(([pName, pSchema]) => ({
+              name: pName,
+              in: 'query',
+              required: (schema.required || []).includes(pName),
+              schema: pSchema,
             })),
           ];
         }
       }
 
-      paths[fullPath][ep.method] = operation;
+      // ── Responses ────────────────────────────────────────────────────────
+      const inferred = inferResponseExample(moduleDir, moduleName, ep, 'js', modelsDir);
+      const successCode = inferred?.status || ep.status;
+      operation.responses[successCode] = inferred
+        ? { description: 'Success', content: { 'application/json': { example: inferred.example } } }
+        : { description: 'Success' };
+      if (ep.hasAuth) operation.responses[401] = { description: 'Unauthorized' };
+      if (ep.roles.length) operation.responses[403] = { description: 'Forbidden' };
+
+      // // @response entries override the inferred ones.
+      for (const r of ep.responses) {
+        let example;
+        try {
+          example = JSON.parse(r.body);
+        } catch {
+          example = undefined;
+        }
+        operation.responses[r.code] = example
+          ? { description: 'Response', content: { 'application/json': { example } } }
+          : { description: r.body };
+      }
+
+      paths[fullPath][ep.method.toLowerCase()] = operation;
     }
   }
 
   return { paths, tags };
 };
-
-// ── Setup ─────────────────────────────────────────────────────────────────────
 
 export const setupSwagger = async (app) => {
   const { paths, tags } = await buildSwaggerDoc();
@@ -228,11 +150,10 @@ export const setupSwagger = async (app) => {
     info: {
       title: config.app.name,
       version: '1.0.0',
-      description: 'Auto-generated API documentation. Add // @doc comments above routes to include them.',
+      description:
+        'Auto-generated API documentation. Add // @doc comments above routes to include them.',
     },
-    servers: [
-      { url: `http://localhost:${config.app.port}`, description: "Local" },
-    ],
+    servers: [{ url: `http://localhost:${config.app.port}`, description: 'Local' }],
     components: {
       securitySchemes: {
         cookieAuth: { type: 'apiKey', in: 'cookie', name: 'connect.sid' },
@@ -242,8 +163,12 @@ export const setupSwagger = async (app) => {
     paths,
   };
 
-  app.use('/docs', swaggerUi.serve, swaggerUi.setup(doc, {
-    customSiteTitle: `${config.app.name} API Docs`,
-    swaggerOptions: { persistAuthorization: true },
-  }));
+  app.use(
+    '/docs',
+    swaggerUi.serve,
+    swaggerUi.setup(doc, {
+      customSiteTitle: `${config.app.name} API Docs`,
+      swaggerOptions: { persistAuthorization: true },
+    })
+  );
 };

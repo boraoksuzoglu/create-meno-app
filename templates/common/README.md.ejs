@@ -104,10 +104,25 @@ src/modules/<name>/<name>.routes.<%= ext %>     ← Router + middleware chain
 <% if (includeAuth) { -%>
 | `npm run create:admin` | Create first admin user |
 <% } -%>
+<% if (includeMdDocs) { -%>
+| `npm run docs` | Generate Markdown docs into `docs/` |
+<% } -%>
 <% if (includeJest) { -%>
 | `npm test` | Run tests |
 <% } -%>
 
+<% if (includeMdDocs) { -%>
+## Documentation
+
+Run `npm run docs` to generate Markdown reference docs into `docs/` (modules + models),
+auto-discovered from your source. Request bodies and query params are derived from the Joi
+schemas (`validateBody`/`validateQuery`), and response examples are inferred from the
+controller → service → model chain — so you normally write only `// @doc <summary>` (and an
+optional `// @desc`). The `@body` / `@query` / `@response` tags are overrides for cases
+inference can't reach. Run `npm run docs -- --check` in CI to fail the build when docs drift.
+Commit `docs/` so AI assistants and humans get an up-to-date map of the API.
+
+<% } -%>
 ## Environment Variables
 
 See `.env.example` for all available options.

@@ -25,7 +25,7 @@ cd <generated-project> && node ../create-meno-app/bin/create-meno-app.js generat
 ```
 
 The config matrix lives in `test/configs.mjs`. `npm test` is fast and offline
-(no install). To prove a generated project actually *runs*, generate it, then in
+(no install). To prove a generated project actually _runs_, generate it, then in
 that dir: `npm install` → `npx tsc --noEmit` (TS) → `npm test` → boot the server
 against a `mongodb-memory-server` URI and hit `GET /health`.
 
@@ -39,6 +39,7 @@ as strings. It renders real template files based on the user's answers.
 `lib/generators/extras/generate-command.js`, which uses the same render engine.
 
 **Engine (`lib/engine/`):**
+
 - `manifest.js` — declarative list: `{ template, dest, when }` for every
   template-driven file. This replaces imperative `if (config.x) write(...)`.
 - `render.js` — resolves a template under `templates/` and renders it (EJS if the
@@ -54,6 +55,7 @@ as strings. It renders real template files based on the user's answers.
 as code on purpose (assembling JSON from feature flags, not file bodies).
 
 **Templates (`templates/`):**
+
 - `common/` — language-agnostic files (one copy serves JS and TS).
 - `js/` and `ts/` — mirror trees for files that genuinely differ by language.
 
@@ -90,3 +92,12 @@ is auto-mounted at `/<name>` (no `app.use()`), and async handlers are wrapped
 automatically (controllers are plain async functions). All `process.env` reads go
 through `src/config/config.<ext>`, which throws at startup on missing vars. See
 `README.md` for the full feature list.
+
+Optional **Markdown docs generator** (`includeMdDocs` → `src/scripts/generate-docs.<ext>`,
+run via `npm run docs`, `--check` to verify in CI): scans `src/modules/` and `src/models/`
+and writes `docs/`. Request bodies / query params are auto-derived from the Joi schemas
+(`validateBody`/`validateQuery`) and responses are inferred from the controller → service →
+model chain; `@doc`/`@desc` are the only routine annotations, with `@body`/`@query`/`@response`
+as overrides. The shared engine `src/utils/doc-introspect.<ext>` (emitted when Swagger OR the
+docs generator is enabled) powers **both** the docs generator and the Swagger util, so they
+never drift. Models are read from the Mongoose schema (fields, enums, `ref`, indexes).

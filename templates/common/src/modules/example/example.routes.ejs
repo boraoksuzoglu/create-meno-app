@@ -1,18 +1,25 @@
 import express from 'express';
 import * as ctrl from './example.controller.js';
-import { createExampleSchema, updateExampleSchema } from './example.validation.js';
-import { validateBody } from '@/middlewares/validation.middleware.js';
+import { createExampleSchema, updateExampleSchema, listExampleSchema } from './example.validation.js';
+import { validateBody, validateQuery } from '@/middlewares/validation.middleware.js';
 <% if (includeAuth) { -%>
 import { isAuthenticated } from '@/middlewares/auth.middleware.js';
 <% } -%>
 
+// @module-desc Reference CRUD module — copy this shape for your own modules.
+
 const router = express.Router();
 
+// Docs note: request body, query params and responses are auto-derived from the
+// Joi schemas + controller/service by Swagger and `npm run docs`. Just write @doc.
+
 // @doc List examples
-router.get('/',    ctrl.list);
+// @desc Returns active examples, paginated.
+router.get('/',    validateQuery(listExampleSchema), ctrl.list);
 // @doc Get example by ID
 router.get('/:id', ctrl.getOne);
 // @doc Create example | 201
+// @desc Creates a new example and returns it.
 router.post(  '/',    <% if (includeAuth) { %>isAuthenticated, <% } %>validateBody(createExampleSchema), ctrl.create);
 // @doc Update example
 router.put(   '/:id', <% if (includeAuth) { %>isAuthenticated, <% } %>validateBody(updateExampleSchema), ctrl.update);
