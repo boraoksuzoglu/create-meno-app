@@ -24,7 +24,7 @@ jobs:
         id: release
         run: |
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            tag="${{ inputs.tag }}"
+            tag=${{ toJSON(github.event.inputs.tag) }}
           else
             tag="${GITHUB_REF_NAME}"
           fi
