@@ -1,0 +1,61 @@
+---
+title: AI-friendly
+description: How create-meno-app generates context files and conventions that let coding agents extend your backend without guessing.
+---
+
+create-meno-app is built so that an AI pair-programmer can be productive in your codebase
+immediately. That comes from two things: **generated context files** and **predictable
+conventions**.
+
+## Generated context files
+
+During setup you can opt into context files for the assistants you use:
+
+| Assistant | File |
+| --- | --- |
+| Claude | `CLAUDE.md` |
+| Cursor | `.cursor/rules/project.mdc` |
+| Kiro | `.kiro/steering/project.md` |
+
+Each one documents the same essentials:
+
+- the stack (Node · Express · MongoDB) and language choice
+- the non-negotiable rules — where models live, how routes auto-mount, that controllers are
+  plain async functions, and that env is read only through the config module
+- the module pattern (`validation → service → controller → routes`)
+- the scaffold command (`npm run generate`) and docs command (`npm run docs`)
+- the built-in endpoints (`/health`, and `/docs` when Swagger is on)
+
+```md
+## Non-negotiable rules
+- All Mongoose models live in src/models/
+- Routes auto-mount from src/modules/<name>/<name>.routes.ts
+- Controllers are plain async functions — no asyncHandler
+- Read env only via @/config/config
+```
+
+## Why the conventions matter for AI
+
+The same properties that make the codebase pleasant for humans make it legible to models:
+
+- **One pattern, everywhere.** Because every module is structured identically, an agent that
+  has seen one knows where to put the next — it edits the right file the first time.
+- **A single source of config.** No `process.env` scattered across files for a model to miss
+  or duplicate.
+- **Derived documentation.** The [docs generator](/docs/docs-generator) emits clean Markdown
+  an LLM can ingest as flat context.
+
+## llms.txt
+
+This documentation site exposes machine-readable indexes for retrieval:
+
+- [`/llms.txt`](/llms.txt) — a concise index of every page with links
+- [`/llms-full.txt`](/llms-full.txt) — the entire documentation concatenated into one file
+
+Every docs page also offers a **Copy page** button (top-right) to grab the Markdown or open
+the page directly in ChatGPT, Claude, Claude Code or Cursor.
+
+<Callout type="tip">
+Point your agent at <code>/llms-full.txt</code> for the whole manual in one request, or use a
+page's "Copy Markdown" action to feed it just the section you're working on.
+</Callout>

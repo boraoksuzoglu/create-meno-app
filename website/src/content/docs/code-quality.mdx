@@ -1,0 +1,38 @@
+---
+title: Code quality
+description: ESLint flat config, Prettier, and a Husky pre-commit hook running lint-staged.
+---
+
+Enabling code quality wires up linting, formatting and a pre-commit hook so style stays
+consistent without anyone thinking about it.
+
+## Tools
+
+- **ESLint** — using the modern flat-config format
+- **Prettier** — opinionated formatting
+- **Husky** — Git hooks
+- **lint-staged** — run linters only on staged files
+
+## Commands
+
+```bash
+npm run lint          # report problems
+npm run lint:fix      # auto-fix what can be fixed
+npm run format        # Prettier --write
+npm run format:check  # verify formatting (CI-friendly)
+```
+
+## Pre-commit hook
+
+Husky installs a `pre-commit` hook that runs **lint-staged**, which lints and formats your
+staged files before each commit. Broken or unformatted code never makes it into history.
+
+```text
+.husky/
+└── pre-commit   # runs lint-staged
+```
+
+<Callout type="note">
+The ESLint and Prettier versions in a generated project are pinned to a coherent, mutually
+compatible set so the tooling works on Node 18+ out of the box.
+</Callout>

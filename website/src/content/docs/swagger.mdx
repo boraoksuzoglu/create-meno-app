@@ -1,0 +1,37 @@
+---
+title: Swagger / OpenAPI
+description: An interactive Swagger UI at GET /docs, generated from the same engine as the Markdown docs so the two never drift.
+---
+
+When you enable Swagger, the generated app serves an interactive **Swagger UI** for exploring
+and testing your API.
+
+<Endpoint method="GET" path="/docs" />
+
+## Generated from your code
+
+The OpenAPI spec is produced by the shared `doc-introspect` engine — the same one behind the
+[Markdown docs generator](/docs/docs-generator). It reads your route annotations, Joi schemas
+and Mongoose models, so the Swagger UI reflects your real API without a hand-maintained spec.
+
+Because both outputs share one engine, the Swagger UI and the Markdown docs are always in
+sync.
+
+## Development only
+
+Swagger UI is mounted in development by default and disabled in production, keeping your
+public surface area minimal. Adjust this in your [config](/docs/architecture#validated-config)
+if you want it available elsewhere.
+
+## Documenting a route
+
+Annotate routes exactly as you would for the Markdown docs:
+
+```ts
+// @doc List products
+// @desc Returns a paginated list of products.
+router.get('/', validateQuery(listSchema), ctrl.list);
+```
+
+The request body, query parameters and response shape are inferred automatically — see
+[Docs generator → Annotations](/docs/docs-generator#annotations) for the full reference.

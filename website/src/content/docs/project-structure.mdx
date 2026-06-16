@@ -1,0 +1,87 @@
+---
+title: Project structure
+description: The folder layout of a generated project and the conventions that keep it predictable.
+---
+
+A generated project follows one consistent shape. Conditional folders appear only when you
+enable the relevant feature.
+
+```text
+my-api/
+├── src/
+│   ├── config/
+│   │   └── config.ts          # the single source of env config
+│   ├── constants/
+│   │   ├── error-codes.ts
+│   │   └── roles.ts           # (auth)
+│   ├── middlewares/
+│   │   ├── auth.middleware.ts        # (auth)
+│   │   ├── cors.middleware.ts
+│   │   ├── error.middleware.ts
+│   │   ├── ratelimit.middleware.ts   # (rate limit)
+│   │   ├── request-id.middleware.ts
+│   │   └── validation.middleware.ts
+│   ├── models/                # ALL Mongoose models live here
+│   │   ├── example.model.ts
+│   │   └── user.model.ts             # (auth)
+│   ├── modules/               # auto-mounted feature modules
+│   │   ├── auth/                     # (auth) → /auth
+│   │   ├── example/                  # → /example
+│   │   └── health/                   # → /health
+│   ├── services/email/        # (email)
+│   ├── templates/emails/      # (email) Handlebars templates
+│   ├── locales/email/         # (email) en + tr
+│   ├── scripts/
+│   │   ├── create-admin.ts          # (auth)
+│   │   └── generate-docs.ts         # (md docs)
+│   ├── utils/
+│   │   ├── route-loader.ts          # the auto-mount engine
+│   │   ├── doc-introspect.ts        # (swagger or md docs)
+│   │   ├── paginate.ts
+│   │   └── ...
+│   └── server.ts
+├── package.json
+├── .env.example
+├── tsconfig.json              # (TypeScript)
+└── README.md
+```
+
+## Two rules that shape everything
+
+### Models live in `src/models/`, never in modules
+
+Every Mongoose schema lives in `src/models/`, regardless of which module uses it. This keeps
+data definitions discoverable and avoids circular imports between feature modules.
+
+### Modules follow one pattern
+
+Each feature in `src/modules/<name>/` is exactly four files:
+
+```text
+<name>.validation.ts   # Joi schemas
+<name>.service.ts      # business logic + DB queries (no HTTP)
+<name>.controller.ts   # HTTP handlers (plain async functions)
+<name>.routes.ts       # router + middleware — auto-mounts at /<name>
+```
+
+The [`generate` command](/docs/generate-command) scaffolds all four (plus the model) for you.
+
+## The config module
+
+Application code **never** reads `process.env` directly. Instead it imports the validated
+config:
+
+```ts
+import { config } from '@/config/config.js';
+
+const port = config.app.port; // ✅
+// const port = process.env.PORT; ❌
+```
+
+This centralizes validation, gives you typed access, and makes missing variables a startup
+error rather than a 3am surprise. More in [Architecture](/docs/architecture#validated-config).
+
+## Path alias
+
+The `@/` alias points to `src/`, wired through `module-alias` at runtime and `tsconfig.json`
+for types — so imports stay clean from anywhere in the tree.

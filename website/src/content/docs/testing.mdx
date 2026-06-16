@@ -1,0 +1,45 @@
+---
+title: Testing
+description: Integration testing with Jest, supertest and an in-memory MongoDB — fast, isolated and offline.
+---
+
+The testing setup gives you real integration tests that run against an **in-memory MongoDB**,
+so they're fast, isolated and need no running database.
+
+## What's included
+
+- **Jest** — the test runner
+- **supertest** — HTTP assertions against your Express app
+- **mongodb-memory-server** — a throwaway MongoDB spun up per test run
+- an **example auth test suite** to copy from
+
+## Running tests
+
+```bash
+npm test                 # run the suite
+npm run test:coverage    # with a coverage report
+```
+
+## Writing a test
+
+```ts
+import request from 'supertest';
+import { app } from '@/server.js';
+
+it('creates a product', async () => {
+  const res = await request(app).post('/product').send({ name: 'Widget' });
+  expect(res.status).toBe(201);
+  expect(res.body.name).toBe('Widget');
+});
+```
+
+## TypeScript
+
+For TypeScript projects, tests run through **`@swc/jest`** for fast transpilation, with a
+`moduleNameMapper` that strips `.js` from imports so `@/x.js` resolves to the `.ts` source.
+You write `import { x } from '@/x.js'` everywhere and it just works in both runtime and tests.
+
+<Callout type="tip">
+Because each run gets a clean in-memory database, tests never depend on leftover state — and
+they pass the same way on your machine and in [CI](/docs/docker-ci).
+</Callout>

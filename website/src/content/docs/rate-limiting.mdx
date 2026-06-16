@@ -1,0 +1,42 @@
+---
+title: Rate limiting
+description: Request rate-limiting middleware backed by an in-memory, MongoDB or Redis store.
+---
+
+Rate limiting adds middleware that caps how many requests a client can make in a window. You
+choose where the counters are stored.
+
+## Stores
+
+### In-memory
+
+Counters live in the process. Zero setup, but **not safe across multiple instances** — each
+replica counts independently. Use it for development or a single-process deployment.
+
+### MongoDB
+
+Counters are stored in your existing MongoDB, shared across every instance. No extra
+infrastructure to run. **Recommended for most production deployments.**
+
+### Redis
+
+Counters live in Redis — fast and distributed. Best when you already operate Redis or need
+the lowest-latency limiting at high request volumes.
+
+## Choosing
+
+| Store | Multi-instance | Extra infra | Use when |
+| --- | --- | --- | --- |
+| In-memory | No | None | Dev, single process |
+| MongoDB | Yes | None (reuses your DB) | Most production apps |
+| Redis | Yes | Redis server | High volume / already on Redis |
+
+## Configuration
+
+Limits (window and max requests) are read through the
+[config module](/docs/architecture#validated-config). Adjust them in `.env` per environment.
+
+<Callout type="warning">
+The in-memory store looks fine in development but silently under-counts once you run more than
+one instance behind a load balancer. Switch to MongoDB or Redis before scaling out.
+</Callout>
