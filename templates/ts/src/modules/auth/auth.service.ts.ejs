@@ -107,7 +107,7 @@ export const findOrCreateSocialUser = async (
   // 3. First time — create a passwordless account.
   if (!user) {
     user = await User.create({
-      email: email || `${provider}-${providerId}@social.local`,
+      email: emailVerified && email ? email : `${provider}-${providerId}@social.local`,
       name: name || null,
       [idField]: providerId,
     } as any);
