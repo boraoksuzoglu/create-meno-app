@@ -51,3 +51,24 @@ export const resetPasswordSchema = Joi.object({
     'any.only': 'PASSWORDS_DO_NOT_MATCH',
   }),
 });
+<% if (socialGoogle) { -%>
+
+// The ID token the client obtains from Google Identity Services / native SDK.
+export const googleSignInSchema = Joi.object({
+  idToken: Joi.string().required().messages({
+    'any.required': 'MISSING_REQUIRED_FIELD',
+  }),
+});
+<% } -%>
+<% if (socialApple) { -%>
+
+// The identity token from Sign in with Apple. `name` is only present on the first
+// sign-in; `nonce` is optional but recommended for replay protection.
+export const appleSignInSchema = Joi.object({
+  identityToken: Joi.string().required().messages({
+    'any.required': 'MISSING_REQUIRED_FIELD',
+  }),
+  nonce: Joi.string().optional(),
+  name: Joi.string().trim().max(100).allow(null, '').optional(),
+});
+<% } -%>

@@ -5,8 +5,14 @@ const userSchema = new mongoose.Schema(
   {
     email:         { type: String, required: true, unique: true, lowercase: true, trim: true },
     name:          { type: String, trim: true, maxlength: 100, default: null },
-    passwordHash:  { type: String, required: true },
+    passwordHash:  { type: String, <% if (social) { %>default: null<% } else { %>required: true<% } %> },
     role:          { type: String, enum: ['user', 'admin'], default: 'user' },
+<% if (socialGoogle) { -%>
+    googleId:      { type: String, default: null, index: { sparse: true } },
+<% } -%>
+<% if (socialApple) { -%>
+    appleId:       { type: String, default: null, index: { sparse: true } },
+<% } -%>
     resetPasswordToken:   { type: String, default: null, index: { sparse: true } },
     resetPasswordExpires: { type: Date,   default: null },
     preferences: {
@@ -17,6 +23,9 @@ const userSchema = new mongoose.Schema(
 );
 
 userSchema.methods.isValidPassword = async function (password) {
+<% if (social) { -%>
+  if (!this.passwordHash) return false; // social-only accounts have no password
+<% } -%>
   return bcrypt.compare(password, this.passwordHash);
 };
 

@@ -4,7 +4,7 @@ import { Reveal } from './Reveal';
 const groups = [
   {
     label: 'Auth & access',
-    items: ['Session auth', 'Register / login / logout', 'Password reset flow', 'RBAC middleware', 'create:admin script', 'bcrypt hashing'],
+    items: ['Session auth', 'Register / login / logout', 'Google Sign-In', 'Apple Sign-In', 'Password reset flow', 'RBAC middleware', 'create:admin script', 'bcrypt hashing'],
   },
   {
     label: 'Data & delivery',

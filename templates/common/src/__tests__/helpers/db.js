@@ -24,4 +24,6 @@ export default async function globalSetup() {
   process.env.GCS_BUCKET_NAME ??= 'test-bucket';
   process.env.GCS_PROJECT_ID ??= 'test-project';
   process.env.GCS_KEY_FILE ??= 'test-key.json';
+  process.env.GOOGLE_CLIENT_IDS ??= 'test-google-client-id';
+  process.env.APPLE_CLIENT_IDS ??= 'test-apple-client-id';
 }

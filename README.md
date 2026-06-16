@@ -37,6 +37,7 @@ npx create-meno-app my-api
 | Option            | What it adds                                                                |
 | ----------------- | --------------------------------------------------------------------------- |
 | Auth module       | register, login, logout, forgot/reset password, change password             |
+| Social sign-in    | Google & Apple via ID-token verification — one flow for web + mobile         |
 | Gmail email       | Handlebars templates, multi-language (en + tr), welcome/forgot/reset emails |
 | File upload       | Local disk (Multer) or Google Cloud Storage with signed URL cache           |
 | Swagger docs      | `GET /docs` — OpenAPI UI, development only                                  |
