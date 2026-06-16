@@ -14,6 +14,7 @@ const PROMPTS: [string, string][] = [
   ['Language', 'TypeScript'],
   ['Include Auth module?', 'Yes'],
   ['Include RBAC (roles & permissions)?', 'Yes'],
+  ['Add social sign-in?', 'Google · Apple'],
   ['Rate limit store', 'MongoDB'],
   ['Include Gmail API email service?', 'Yes'],
   ['Include Swagger / OpenAPI (GET /docs)?', 'Yes'],

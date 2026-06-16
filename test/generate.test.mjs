@@ -55,6 +55,8 @@ for (const [name, config] of Object.entries(scenarios)) {
         [config.includeSwagger || config.includeMdDocs, `src/utils/doc-introspect.${ext}`],
         [config.includeUpload, `src/utils/upload.${ext}`],
         [config.includeEmail, `src/services/email/email.service.${ext}`],
+        [config.socialProviders?.includes('google'), `src/services/social/google.service.${ext}`],
+        [config.socialProviders?.includes('apple'), `src/services/social/apple.service.${ext}`],
         [config.includeJest, 'jest.config.js'],
         [config.includeEslint, 'eslint.config.js'],
         [config.includeDocker, 'Dockerfile'],

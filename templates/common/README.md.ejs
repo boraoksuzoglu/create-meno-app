@@ -16,6 +16,12 @@
 - Auth module (register / login / logout / change password / forgot & reset password)
 - Admin seed script (`npm run create:admin`)
 <% } -%>
+<% if (socialGoogle) { -%>
+- Google Sign-In — verifies client ID tokens (web + mobile), one unified endpoint
+<% } -%>
+<% if (socialApple) { -%>
+- Apple Sign-In — verifies client identity tokens (web + mobile), one unified endpoint
+<% } -%>
 <% if (includeUpload && uploadProvider === 'gcs') { -%>
 - Google Cloud Storage upload (signed URL cache)
 <% } -%>
@@ -122,6 +128,99 @@ optional `// @desc`). The `@body` / `@query` / `@response` tags are overrides fo
 inference can't reach. Run `npm run docs -- --check` in CI to fail the build when docs drift.
 Commit `docs/` so AI assistants and humans get an up-to-date map of the API.
 
+<% } -%>
+<% if (social) { -%>
+## Social Sign-In
+
+This backend uses **ID-token verification** — the same flow for web and mobile.
+Your client (web SDK or native iOS/Android/React-Native) performs the sign-in UI,
+obtains a signed **ID token**, and POSTs it to the backend. The server verifies the
+token against <%= socialGoogle && socialApple ? "Google's / Apple's" : (socialGoogle ? "Google's" : "Apple's") %>
+public keys, then finds-or-creates the user and issues the **same session cookie**
+as password login. Accounts are linked by verified email, so a user keeps one account
+across password and social sign-in.
+
+> Send requests with `credentials: 'include'` (web) so the session cookie is stored.
+
+<% if (socialGoogle) { -%>
+### Google
+
+**Endpoint:** `POST /auth/google` — body `{ "idToken": "<google ID token>" }`
+
+**Setup:** In [Google Cloud Console](https://console.cloud.google.com/apis/credentials)
+create an OAuth client ID for each platform you ship (Web, iOS, Android). Put every
+client ID that can call this backend into `GOOGLE_CLIENT_IDS` (comma-separated) — the
+token's `aud` must match one of them.
+
+```js
+// Web — Google Identity Services
+google.accounts.id.initialize({
+  client_id: 'YOUR_WEB_CLIENT_ID.apps.googleusercontent.com',
+  callback: async ({ credential }) => {
+    await fetch('/auth/google', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ idToken: credential }),
+    });
+  },
+});
+```
+
+```js
+// Mobile — @react-native-google-signin/google-signin (configure with webClientId)
+const { data } = await GoogleSignin.signIn();
+await fetch('https://your-api/auth/google', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ idToken: data.idToken }),
+});
+```
+
+<% } -%>
+<% if (socialApple) { -%>
+### Apple
+
+**Endpoint:** `POST /auth/apple` — body `{ "identityToken": "...", "nonce": "...", "name": "..." }`
+
+**Setup:** In the [Apple Developer portal](https://developer.apple.com/account/resources/identifiers/list/serviceId)
+enable Sign in with Apple. Put your **Services ID** (web) and/or app **bundle ID**
+(native) into `APPLE_CLIENT_IDS` (comma-separated). Apple sends the user's **name only
+on the first sign-in**, and in the client payload — not the token — so forward it.
+
+```js
+// Web — Sign in with Apple JS
+const res = await AppleID.auth.signIn();
+await fetch('/auth/apple', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  credentials: 'include',
+  body: JSON.stringify({
+    identityToken: res.authorization.id_token,
+    name: res.user ? `${res.user.name.firstName} ${res.user.name.lastName}` : undefined,
+  }),
+});
+```
+
+```js
+// Mobile — expo-apple-authentication
+const credential = await AppleAuthentication.signInAsync({
+  requestedScopes: [
+    AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
+    AppleAuthentication.AppleAuthenticationScope.EMAIL,
+  ],
+});
+await fetch('https://your-api/auth/apple', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    identityToken: credential.identityToken,
+    name: credential.fullName?.givenName,
+  }),
+});
+```
+
+<% } -%>
 <% } -%>
 ## Environment Variables
 

@@ -5,6 +5,7 @@
 
 const base = {
   includeRbac: false,
+  socialProviders: [],
   rateLimitStore: 'memory',
   includeLogger: false,
   includeUpload: false,
@@ -35,6 +36,7 @@ export const scenarios = {
     language: 'js',
     includeAuth: true,
     includeRbac: true,
+    socialProviders: ['google', 'apple'],
     includeRateLimit: true,
     rateLimitStore: 'mongo',
     includeLogger: true,
@@ -57,6 +59,7 @@ export const scenarios = {
     language: 'ts',
     includeAuth: true,
     includeRbac: true,
+    socialProviders: ['google', 'apple'],
     includeRateLimit: true,
     rateLimitStore: 'mongo',
     includeLogger: true,
@@ -94,6 +97,19 @@ export const scenarios = {
     includeAuth: true,
     includeRateLimit: true,
     rateLimitStore: 'redis',
+    includeJest: true,
+    includeEslint: true,
+    includeSwagger: true,
+  },
+
+  // Social sign-in without email — exercises the passwordless / link-by-email path.
+  'social-auth-js': {
+    ...base,
+    projectName: 'social-auth-js',
+    language: 'js',
+    includeAuth: true,
+    socialProviders: ['google', 'apple'],
+    includeRateLimit: false,
     includeJest: true,
     includeEslint: true,
     includeSwagger: true,

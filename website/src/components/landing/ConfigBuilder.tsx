@@ -10,6 +10,8 @@ interface Config {
   language: 'ts' | 'js';
   auth: boolean;
   rbac: boolean;
+  googleSignIn: boolean;
+  appleSignIn: boolean;
   rateLimit: boolean;
   rateStore: 'memory' | 'mongo' | 'redis';
   logger: boolean;
@@ -32,6 +34,8 @@ const DEFAULTS: Config = {
   language: 'ts',
   auth: true,
   rbac: true,
+  googleSignIn: true,
+  appleSignIn: true,
   rateLimit: true,
   rateStore: 'mongo',
   logger: true,
@@ -92,6 +96,12 @@ function buildTree(c: Config): Line[] {
   add('example/ → /example', 3, 'dir');
   add('health/ → /health', 3, 'dir');
 
+  if (c.auth && (c.googleSignIn || c.appleSignIn)) {
+    add('services/social/', 2, 'dir', 'emerald');
+    if (c.googleSignIn) add(`google.service.${ext}`, 3, 'file', 'emerald');
+    if (c.appleSignIn) add(`apple.service.${ext}`, 3, 'file', 'emerald');
+  }
+
   if (c.email) {
     add('services/email/', 2, 'dir', 'cyan');
     add(`email.service.${ext}`, 3, 'file');
@@ -140,6 +150,10 @@ function answers(c: Config): [string, string][] {
   const a: [string, string][] = [['Language', c.language === 'ts' ? 'TypeScript' : 'JavaScript (ESM)']];
   a.push(['Auth module', c.auth ? 'Yes' : 'No']);
   if (c.auth) a.push(['RBAC', c.rbac ? 'Yes' : 'No']);
+  if (c.auth) {
+    const social = [c.googleSignIn && 'Google', c.appleSignIn && 'Apple'].filter(Boolean).join(' · ');
+    a.push(['Social sign-in', social || 'No']);
+  }
   a.push(['Rate limiting', c.rateLimit ? (c.rateStore === 'mongo' ? 'MongoDB' : c.rateStore === 'redis' ? 'Redis' : 'In-memory') : 'No']);
   a.push(['Winston logger', c.logger ? 'Yes' : 'No']);
   a.push(['File upload', c.upload ? (c.uploadProvider === 'gcs' ? 'Google Cloud Storage' : 'Local disk') : 'No']);
@@ -227,6 +241,8 @@ export function ConfigBuilder() {
             <div className="grid grid-cols-2 gap-x-6 gap-y-1 sm:grid-cols-3">
               <Toggle label="Auth" checked={c.auth} onChange={(v) => set('auth', v)} />
               <Toggle label="RBAC" checked={c.rbac} disabled={!c.auth} onChange={(v) => set('rbac', v)} />
+              <Toggle label="Google Sign-In" checked={c.googleSignIn} disabled={!c.auth} onChange={(v) => set('googleSignIn', v)} />
+              <Toggle label="Apple Sign-In" checked={c.appleSignIn} disabled={!c.auth} onChange={(v) => set('appleSignIn', v)} />
               <Toggle label="Rate limit" checked={c.rateLimit} onChange={(v) => set('rateLimit', v)} />
               <Toggle label="Logger" checked={c.logger} onChange={(v) => set('logger', v)} />
               <Toggle label="Upload" checked={c.upload} onChange={(v) => set('upload', v)} />

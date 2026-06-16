@@ -1,5 +1,11 @@
 import * as authService from './auth.service.js';
 import { config } from '@/config/config.js';
+<% if (socialGoogle) { -%>
+import { verifyGoogleToken } from '@/services/social/google.service.js';
+<% } -%>
+<% if (socialApple) { -%>
+import { verifyAppleToken } from '@/services/social/apple.service.js';
+<% } -%>
 
 // Plain async functions.
 // The route loader automatically wraps all async handlers — no manual wrapping needed.
@@ -32,6 +38,27 @@ export const login = async (req: any, res: any) => {
   await saveSession(req.session);
   res.status(200).json(response);
 };
+<% if (socialGoogle) { -%>
+
+export const googleSignIn = async (req: any, res: any) => {
+  const identity = await verifyGoogleToken(req.body.idToken);
+  await regenerateSession(req.session);
+  const response = await authService.findOrCreateSocialUser(identity, req.session);
+  await saveSession(req.session);
+  res.status(200).json(response);
+};
+<% } -%>
+<% if (socialApple) { -%>
+
+export const appleSignIn = async (req: any, res: any) => {
+  const { identityToken, nonce, name } = req.body;
+  const identity = await verifyAppleToken(identityToken, { nonce, name });
+  await regenerateSession(req.session);
+  const response = await authService.findOrCreateSocialUser(identity, req.session);
+  await saveSession(req.session);
+  res.status(200).json(response);
+};
+<% } -%>
 
 export const me = async (req: any, res: any) => {
   const response = await authService.getUserById(req.userId);

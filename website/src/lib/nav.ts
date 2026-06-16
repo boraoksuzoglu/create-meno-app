@@ -75,6 +75,11 @@ export const docsGroups: NavGroup[] = [
         description: 'Session auth, password flows and role-based access control.',
       },
       {
+        title: 'Social sign-in',
+        slug: 'social-sign-in',
+        description: 'Google & Apple sign-in via ID-token verification — web and mobile.',
+      },
+      {
         title: 'Email',
         slug: 'email',
         description: 'Gmail API service with Handlebars templates and locales.',

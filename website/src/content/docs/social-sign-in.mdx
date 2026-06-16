@@ -1,0 +1,117 @@
+---
+title: Social sign-in
+description: Google and Apple sign-in via ID-token verification — one backend flow that works identically for web and mobile clients.
+---
+
+When you enable Google and/or Apple sign-in, the auth module gains endpoints that
+verify a client-issued **ID token** and sign the user in with the **same session
+cookie** as password login. There are no redirect URIs and no callback routes — the
+same backend serves web, iOS, Android and React Native.
+
+<Callout type="note">
+Social sign-in builds on the auth module, so it's only offered when **Auth** is enabled.
+It reuses the `User` model and session middleware described in [Auth & RBAC](/docs/auth-rbac).
+</Callout>
+
+## How it works
+
+1. The **client** (web SDK or native iOS/Android/React Native) runs the sign-in UI and
+   obtains a signed **ID token (JWT)**.
+2. It POSTs that token to the backend.
+3. The backend **verifies the signature** against Google's / Apple's public keys and
+   checks the token's `aud` against your configured client IDs.
+4. It **finds or creates** the user (linking to an existing account when the verified
+   email matches) and issues the session cookie.
+
+Because verification is all the server does, the flow is identical for every platform —
+you just list every client ID that may call your API as an accepted audience.
+
+## Endpoints
+
+<Endpoint method="POST" path="/auth/google" />
+<Endpoint method="POST" path="/auth/apple" />
+
+## Configuration
+
+Each provider accepts a **comma-separated list of client IDs** — add one per platform
+you ship (web, iOS, Android). The token's `aud` claim must match one of them.
+
+```bash
+# Google — web, iOS and/or Android OAuth client IDs
+GOOGLE_CLIENT_IDS=your-web-client-id.apps.googleusercontent.com,your-ios-client-id.apps.googleusercontent.com
+
+# Apple — Services ID (web) and/or app bundle ID (native)
+APPLE_CLIENT_IDS=com.yourcompany.app
+```
+
+Create the IDs in the [Google Cloud Console](https://console.cloud.google.com/apis/credentials)
+and the [Apple Developer portal](https://developer.apple.com/account/resources/identifiers/list/serviceId)
+(enable *Sign in with Apple*).
+
+## Web client
+
+Send requests with `credentials: 'include'` so the browser stores the session cookie.
+
+```js
+// Google Identity Services
+google.accounts.id.initialize({
+  client_id: 'YOUR_WEB_CLIENT_ID.apps.googleusercontent.com',
+  callback: ({ credential }) =>
+    fetch('/auth/google', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ idToken: credential }),
+    }),
+});
+
+// Sign in with Apple JS
+const res = await AppleID.auth.signIn();
+await fetch('/auth/apple', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  credentials: 'include',
+  body: JSON.stringify({ identityToken: res.authorization.id_token }),
+});
+```
+
+## Mobile client
+
+```js
+// React Native — @react-native-google-signin/google-signin (configure webClientId)
+const { data } = await GoogleSignin.signIn();
+await fetch('https://your-api/auth/google', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ idToken: data.idToken }),
+});
+
+// Expo — expo-apple-authentication
+const credential = await AppleAuthentication.signInAsync({
+  requestedScopes: [
+    AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
+    AppleAuthentication.AppleAuthenticationScope.EMAIL,
+  ],
+});
+await fetch('https://your-api/auth/apple', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    identityToken: credential.identityToken,
+    name: credential.fullName?.givenName,
+  }),
+});
+```
+
+## Account linking
+
+When a provider reports a **verified email** that already belongs to a user, the
+provider ID is attached to that existing account instead of creating a duplicate — so a
+user who first registered with a password and later taps "Sign in with Google" keeps a
+single account.
+
+<Callout type="note">
+Apple only returns the user's **name on the first sign-in**, and it arrives in the client
+payload rather than inside the token. Forward it as `name` on that first request — the
+backend stores it then. Social-only accounts are created without a password.
+</Callout>

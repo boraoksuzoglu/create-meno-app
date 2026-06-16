@@ -3,6 +3,12 @@ import * as ctrl from './auth.controller.js';
 import {
   registerSchema, loginSchema, updateProfileSchema,
   changePasswordSchema, forgotPasswordSchema, resetPasswordSchema,
+<% if (socialGoogle) { -%>
+  googleSignInSchema,
+<% } -%>
+<% if (socialApple) { -%>
+  appleSignInSchema,
+<% } -%>
 } from './auth.validation.js';
 import { validateBody } from '@/middlewares/validation.middleware.js';
 import { isAuthenticated } from '@/middlewares/auth.middleware.js';
@@ -13,6 +19,14 @@ const router = express.Router();
 router.post('/register',       validateBody(registerSchema),       ctrl.register);
 // @doc Login
 router.post('/login',          validateBody(loginSchema),          ctrl.login);
+<% if (socialGoogle) { -%>
+// @doc Sign in with a Google ID token
+router.post('/google',         validateBody(googleSignInSchema),   ctrl.googleSignIn);
+<% } -%>
+<% if (socialApple) { -%>
+// @doc Sign in with an Apple identity token
+router.post('/apple',          validateBody(appleSignInSchema),    ctrl.appleSignIn);
+<% } -%>
 // @doc Logout
 router.post('/logout',         isAuthenticated,                    ctrl.logout);
 // @doc Get current user
