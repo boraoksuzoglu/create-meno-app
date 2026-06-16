@@ -25,7 +25,7 @@ type Phase = 'typing' | 'banner' | 'prompts' | 'done';
 
 const CMD = 'npx create-meno-app my-api';
 
-export function TerminalAnimation() {
+export function TerminalAnimation({ version }: { version: string }) {
   const [typed, setTyped] = useState('');
   const [phase, setPhase] = useState<Phase>('typing');
   const [visiblePrompts, setVisiblePrompts] = useState(0);
@@ -144,7 +144,7 @@ export function TerminalAnimation() {
               {BANNER}
             </pre>
             <div className="mt-1 text-ink-faint">
-              create-meno-app <span className="text-emerald">v1.3.0</span>
+              create-meno-app <span className="text-emerald">v{version}</span>
             </div>
             <div className="text-ink-faint">MongoDB · Express · Node.js</div>
             <div className="mb-2 text-ink-faint">Production-ready boilerplate generator</div>

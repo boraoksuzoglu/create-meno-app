@@ -15,7 +15,7 @@ const fadeUp = {
   }),
 };
 
-export function Hero() {
+export function Hero({ version }: { version: string }) {
   return (
     <section className="relative overflow-hidden pt-16 pb-24 sm:pt-24">
       {/* background */}
@@ -114,7 +114,7 @@ export function Hero() {
           animate={{ opacity: 1, scale: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.25, ease: [0.22, 1, 0.36, 1] }}
         >
-          <TerminalAnimation />
+          <TerminalAnimation version={version} />
         </motion.div>
       </div>
     </section>
