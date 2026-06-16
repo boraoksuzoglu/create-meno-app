@@ -1,0 +1,57 @@
+---
+title: Generate command
+description: Scaffold a fully wired feature module — model, validation, service, controller and routes — with one command.
+---
+
+Inside a generated project, `npm run generate` scaffolds a complete feature module that
+follows the project's conventions and auto-mounts immediately.
+
+```bash
+npm run generate product
+```
+
+## What it creates
+
+Five files, ready to extend:
+
+```text
+✓ src/models/product.model.ts
+✓ src/modules/product/product.validation.ts
+✓ src/modules/product/product.service.ts
+✓ src/modules/product/product.controller.ts
+✓ src/modules/product/product.routes.ts   → mounted at /product
+```
+
+Because of the [auto route loader](/docs/architecture#auto-route-loader), the new routes are
+live the moment you save — no registration step.
+
+## The module pattern
+
+Every generated module separates concerns the same way:
+
+- **`validation`** — Joi schemas only. Used by `validateBody` / `validateQuery` middleware
+  and read by the [docs generator](/docs/docs-generator).
+- **`service`** — business logic and database queries. No HTTP objects here, so it's easy to
+  test and reuse.
+- **`controller`** — thin HTTP handlers, written as plain async functions.
+- **`routes`** — the router and its middleware chain.
+
+```ts
+// product.service.ts — pure logic, HTTP-free
+import { Product } from '@/models/product.model.js';
+
+export const createProduct = (data) => Product.create(data);
+```
+
+## Flags
+
+| Command | Effect |
+| --- | --- |
+| `npm run generate product` | Scaffold the `product` module |
+| `npm run generate product --dry-run` | Preview the files without writing them |
+| `npm run generate -- --list` | List existing modules |
+
+<Callout type="tip">
+The generator is the same render engine the CLI uses to create projects, so generated modules
+always match the structure and style of the rest of your codebase.
+</Callout>

@@ -1,0 +1,77 @@
+---
+title: Quick start
+description: Scaffold, install and boot your first create-meno-app backend in three commands.
+---
+
+## Prerequisites
+
+- **Node.js 18 or newer** (`node --version`)
+- A **MongoDB** instance — local, Docker, or a hosted Atlas cluster
+- npm (ships with Node)
+
+## Scaffold a project
+
+Run the generator with `npx` — no global install needed:
+
+```bash
+npx create-meno-app my-api
+```
+
+You'll be guided through a short set of prompts (language, auth, rate limiting, email,
+testing, Docker and more). Every answer is optional — accept the defaults for a fully
+loaded project or trim it down to the essentials. See [CLI options](/docs/cli-options) for
+the full list.
+
+## Install and configure
+
+```bash
+cd my-api
+npm install
+cp .env.example .env
+```
+
+Open `.env` and fill in your values — at minimum a `MONGODB_URI` and, if you enabled auth,
+a `SESSION_SECRET`. The app reads **every** environment variable through a single validated
+[config module](/docs/architecture#validated-config) and refuses to start if a required one
+is missing.
+
+<Callout type="note" title="First admin user">
+If you enabled the auth module, bootstrap an admin account with:
+
+```bash
+npm run create:admin
+```
+</Callout>
+
+## Run it
+
+```bash
+npm run dev
+```
+
+The server boots with hot reload. Verify it's alive:
+
+<Endpoint method="GET" path="/health" />
+
+```json
+{ "status": "ok", "uptime": 12.4, "db": "connected", "timestamp": "..." }
+```
+
+If you enabled Swagger, the interactive API explorer is at `GET /docs` in development.
+
+## Project scripts
+
+| Script | What it does |
+| --- | --- |
+| `npm run dev` | Start the dev server with auto-reload |
+| `npm start` | Start the production server |
+| `npm run generate <name>` | [Scaffold a new module](/docs/generate-command) |
+| `npm run docs` | [Generate Markdown API docs](/docs/docs-generator) |
+| `npm test` | Run the Jest suite (if enabled) |
+| `npm run build` | Compile TypeScript to `dist/` (TS projects) |
+
+## Next steps
+
+- Generate your first feature module: [`npm run generate product`](/docs/generate-command)
+- Understand the [project structure](/docs/project-structure)
+- Learn the [core architecture](/docs/architecture)

@@ -1,0 +1,50 @@
+---
+title: Introduction
+description: What create-meno-app is, the problem it solves, and the philosophy behind the backends it generates.
+---
+
+**create-meno-app** is a CLI that scaffolds a production-ready **MongoDB · Express · Node.js**
+backend in seconds. Answer a handful of prompts and you get a complete, conventional API —
+not a toy starter, but the project you'd otherwise spend a day wiring by hand.
+
+```bash
+npx create-meno-app my-api
+```
+
+## Why it exists
+
+Every new Node backend starts with the same chores: folder structure, error handling,
+config validation, request logging, a route registry, auth, tests, linting, Docker. Most
+starters either give you too little (an `app.js` and a prayer) or too much (an opinionated
+framework you have to fight).
+
+create-meno-app takes a different path. It generates **plain, idiomatic Express code** with
+a few high-leverage conventions baked in, then gets out of your way.
+
+<Callout type="tip" title="The one-liner">
+Scaffold a full backend in seconds, not hours — AI-friendly, with auto-generated docs that
+never drift.
+</Callout>
+
+## What makes it different
+
+- **Zero-boilerplate routing.** Drop a `*.routes.ts` file in `src/modules/` and it auto-mounts.
+  No `app.use()`, no central registry. Async errors are wrapped for you.
+- **Docs that derive from code.** A single introspection engine reads your routes, Joi schemas
+  and Mongoose models to power both Markdown docs and Swagger — so they can never drift.
+- **AI-friendly by construction.** Optional `CLAUDE.md`, Cursor and Kiro context files, plus
+  a strict, repeatable module pattern that coding agents understand on the first try.
+- **A real feature matrix.** Auth, RBAC, email, uploads, rate limiting, logging, testing,
+  Docker and CI are all opt-in toggles — JavaScript or TypeScript.
+
+## Who it's for
+
+Anyone building a REST API on the MongoDB · Express · Node stack who wants to skip the
+setup ritual and start on features — solo developers, teams standardizing their services,
+and AI agents scaffolding backends on demand.
+
+## Next steps
+
+- [Quick start](/docs/getting-started) — generate and boot your first project.
+- [CLI options](/docs/cli-options) — every prompt explained.
+- [Architecture](/docs/architecture) — the conventions that make it tick.

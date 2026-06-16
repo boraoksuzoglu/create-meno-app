@@ -1,0 +1,44 @@
+---
+title: Email
+description: A Gmail API email service with Handlebars templates and optional English + Turkish locales.
+---
+
+The email service sends transactional mail through the **Gmail API**, with HTML rendered from
+**Handlebars** templates.
+
+## What's included
+
+- `src/services/email/email.service.ts` — the sending service
+- `src/templates/emails/*.hbs` — HTML templates
+- `src/locales/email/` — copy, per language
+
+### Bundled templates
+
+| Template | Sent when |
+| --- | --- |
+| `welcome.hbs` | A new user registers |
+| `forgot-password.hbs` | A password reset is requested *(with auth)* |
+| `password-changed.hbs` | A password is changed *(with auth)* |
+
+## Multi-language
+
+Enable **multi-language email templates** and you get `en` and `tr` locale files. The service
+picks the right copy at send time, so you can localize transactional mail without duplicating
+template markup.
+
+```ts
+import { sendWelcomeEmail } from '@/services/email/email.service.js';
+
+await sendWelcomeEmail(user.email, { name: user.name, lang: 'tr' });
+```
+
+## Configuration
+
+Gmail API credentials are read through the [config module](/docs/architecture#validated-config)
+from your `.env`. Fill in the relevant values (client ID, secret, refresh token and sender
+address) before sending in production.
+
+<Callout type="note">
+The email service integrates with the [auth module](/docs/auth-rbac): when both are enabled,
+password-reset and password-changed mails are sent automatically as part of the auth flows.
+</Callout>

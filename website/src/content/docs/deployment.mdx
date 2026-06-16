@@ -1,0 +1,63 @@
+---
+title: Deployment
+description: Taking a generated project to production — environment variables, builds and running the server.
+---
+
+A generated project is a standard Node application, so it deploys anywhere that runs Node —
+a VM, a container platform, or a managed host.
+
+## Environment variables
+
+All configuration is read through the [config module](/docs/architecture#validated-config),
+which validates required variables at startup. Set them in your platform's environment (never
+commit `.env`). Common ones:
+
+| Variable | Purpose |
+| --- | --- |
+| `MONGODB_URI` | Connection string for your database |
+| `PORT` | Port the server listens on |
+| `NODE_ENV` | `production` in production |
+| `SESSION_SECRET` | Session signing secret *(with auth)* |
+
+If a required variable is missing, the app fails fast on boot with a clear message — so a
+misconfigured deploy never limps along in a half-broken state.
+
+## Build & run
+
+### TypeScript
+
+```bash
+npm run build   # compile to dist/
+npm start       # run the compiled server
+```
+
+### JavaScript
+
+```bash
+npm start
+```
+
+## Containerized
+
+If you enabled [Docker](/docs/docker-ci), build and run the image directly:
+
+```bash
+docker build -t my-api .
+docker run -p 3000:3000 --env-file .env my-api
+```
+
+The configured `HEALTHCHECK` hits [`GET /health`](/docs/architecture#health-check), and
+[graceful shutdown](/docs/architecture#graceful-shutdown) handles rolling deploys cleanly.
+
+## Production checklist
+
+- Set `NODE_ENV=production`
+- Provide all required environment variables
+- Use a multi-instance-safe [rate-limit store](/docs/rate-limiting) (MongoDB or Redis)
+- Point logging where your platform collects it
+- Swagger UI is disabled in production by default — keep it that way unless you need it
+
+<Callout type="tip">
+Run your [tests](/docs/testing) and `npm run docs -- --check` in CI before deploying so a
+broken build or stale docs never reaches production.
+</Callout>

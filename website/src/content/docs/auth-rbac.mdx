@@ -1,0 +1,51 @@
+---
+title: Auth & RBAC
+description: Session-based authentication with password flows, bcrypt hashing, an admin bootstrap script and optional role-based access control.
+---
+
+Enabling the auth module generates a complete authentication system mounted at `/auth`,
+along with the `User` model and the middleware to protect your routes.
+
+## Endpoints
+
+<Endpoint method="POST" path="/auth/register" />
+<Endpoint method="POST" path="/auth/login" />
+<Endpoint method="POST" path="/auth/logout" />
+<Endpoint method="POST" path="/auth/forgot-password" />
+<Endpoint method="POST" path="/auth/reset-password/:token" />
+<Endpoint method="POST" path="/auth/change-password" />
+
+## How it works
+
+- **Sessions** — authentication is session-based using `express-session` with `connect-mongo`,
+  so sessions persist in your MongoDB database.
+- **Password hashing** — passwords are hashed with `bcrypt`; plaintext is never stored.
+- **Password flows** — forgot / reset / change password are wired end to end. When the
+  [email service](/docs/email) is enabled, reset links and confirmations are sent
+  automatically using the bundled templates.
+
+## Bootstrap an admin
+
+After your first install, create an initial admin user:
+
+```bash
+npm run create:admin
+```
+
+## Role-based access control
+
+If you enabled **RBAC**, role-and-permission middleware is generated so you can guard routes:
+
+```ts
+import { requireRole } from '@/middlewares/auth.middleware.js';
+
+router.delete('/:id', requireRole('admin'), ctrl.remove);
+```
+
+Roles are defined in `src/constants/roles.ts`. The `User` model carries a role field that the
+middleware checks on protected routes.
+
+<Callout type="note">
+RBAC is only available when the auth module is enabled — it builds on the same `User` model
+and session middleware.
+</Callout>

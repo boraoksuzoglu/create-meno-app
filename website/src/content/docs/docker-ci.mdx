@@ -1,0 +1,47 @@
+---
+title: Docker & CI
+description: A Dockerfile with a healthcheck, a docker-compose stack with MongoDB, and a GitHub Actions pipeline.
+---
+
+The DevOps options generate everything you need to containerize the app and run a CI pipeline.
+
+## Docker
+
+Enabling Docker adds:
+
+```text
+Dockerfile           # multi-stage build (compiles TS → dist/ for TypeScript)
+docker-compose.yml   # app + MongoDB service
+.dockerignore        # lean build context
+```
+
+- The `Dockerfile` is multi-stage for TypeScript projects, producing a small runtime image
+  from the compiled `dist/`.
+- A `HEALTHCHECK` is configured against [`GET /health`](/docs/architecture#health-check).
+- `docker-compose.yml` brings up the app alongside a MongoDB container for local end-to-end runs.
+
+```bash
+docker compose up
+```
+
+## GitHub Actions CI
+
+Enabling CI adds a workflow at `.github/workflows/ci.yml` plus a Dependabot config. The
+pipeline runs the checks that matter:
+
+1. **Lint** — ESLint
+2. **Test** — Jest with coverage
+3. **Build** — `npm run build` / TypeScript compile
+4. **Docs check** — `npm run docs -- --check`, failing if the committed docs are
+   [stale](/docs/docs-generator#keep-docs-honest-in-ci)
+
+```text
+.github/
+├── workflows/ci.yml
+└── dependabot.yml
+```
+
+<Callout type="tip">
+The docs-check step is what keeps your API documentation trustworthy over time — a PR that
+changes a route but forgets to regenerate docs fails CI instead of silently drifting.
+</Callout>

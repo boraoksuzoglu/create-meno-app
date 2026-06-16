@@ -1,0 +1,34 @@
+---
+title: Logging
+description: Structured application logging with Winston and daily-rotating log files.
+---
+
+The logger is a configured **Winston** instance with **daily-rotating files**, generated at
+`src/utils/logger.ts`.
+
+```ts
+import { logger } from '@/utils/logger.js';
+
+logger.info('Order placed', { orderId, userId });
+logger.error('Payment failed', { err });
+```
+
+## What you get
+
+- **Structured logs** — log with a message and a metadata object; output is consistent and
+  machine-parseable.
+- **Daily rotation** — files roll over each day so logs stay manageable and old logs are
+  retained on a schedule rather than growing unbounded.
+- **Request correlation** — pair log lines with the
+  [`X-Request-ID`](/docs/architecture#request-ids) to trace a single request end to end.
+
+## Levels and configuration
+
+Log level and output behavior are driven through the
+[config module](/docs/architecture#validated-config), so you can run verbose logs in
+development and trim to warnings in production via `.env`.
+
+<Callout type="tip">
+In containerized deployments you'll often also want logs on stdout for your platform to
+collect — the Winston setup is a normal logger you can extend with additional transports.
+</Callout>

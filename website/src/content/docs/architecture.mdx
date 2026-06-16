@@ -1,0 +1,106 @@
+---
+title: Architecture
+description: The conventions that remove boilerplate — auto route loading, async wrapping, validated config, observability and graceful lifecycle.
+---
+
+create-meno-app's value is in its conventions. They're deliberately small in number and
+high in leverage — each one removes a category of boilerplate you'd otherwise write by hand.
+
+## Auto route loader
+
+Any file matching `src/modules/<name>/<name>.routes.<ext>` is **automatically mounted** at
+`/<name>`. There is no central registry and no `app.use()` to maintain.
+
+| File | Mounted at |
+| --- | --- |
+| `src/modules/auth/auth.routes.ts` | `/auth` |
+| `src/modules/product/product.routes.ts` | `/product` |
+| `src/modules/health/health.routes.ts` | `/health` |
+
+```ts
+import express from 'express';
+import * as ctrl from './product.controller.js';
+
+const router = express.Router();
+router.get('/', ctrl.list);
+router.post('/', ctrl.create);
+
+export default router; // auto-mounts at /product
+```
+
+<Callout type="note" title="Opt out">
+Add `// @no-auto-load` as the first line of a routes file to skip auto-mounting and wire it
+yourself.
+</Callout>
+
+## Auto async wrapping
+
+Controllers are **plain async functions**. The route loader wraps every handler at mount
+time, so a thrown error or rejected promise is forwarded to the error middleware
+automatically. No `asyncHandler()`, no `try/catch` ceremony.
+
+```ts
+// controllers are just async functions
+export const create = async (req, res) =>
+  res.status(201).json(await service.createProduct(req.body));
+```
+
+Errors are normalized through a central error handler and the codes in
+`src/constants/error-codes.ts` — no magic strings scattered around.
+
+## Validated config
+
+All environment access flows through `src/config/config.ts`. It reads each variable once,
+validates that required ones are present, and **throws at startup** with a clear message if
+something is missing — turning a runtime surprise into an immediate, obvious failure.
+
+```ts
+import { config } from '@/config/config.js';
+const uri = config.db.uri;
+```
+
+## Request IDs
+
+Every request is tagged with an `X-Request-ID` (generated if the client didn't send one), so
+log lines and traces can be correlated across a request's lifecycle.
+
+## Graceful shutdown
+
+On `SIGTERM` / `SIGINT`, the server stops accepting new connections, lets in-flight requests
+finish, and closes the MongoDB connection cleanly — the behavior orchestrators and load
+balancers expect during a rolling deploy.
+
+## Health check
+
+<Endpoint method="GET" path="/health" />
+
+Returns status, uptime and database connectivity — ready to drop into a Docker `HEALTHCHECK`
+or a load-balancer probe.
+
+## Pagination
+
+A small utility gives every list endpoint consistent paging:
+
+```ts
+import { paginate, paginatedResponse } from '@/utils/paginate.js';
+
+export const listProducts = async (query) => {
+  const { page, limit, skip } = paginate(query);
+  const [items, total] = await Promise.all([
+    Product.find().skip(skip).limit(limit),
+    Product.countDocuments(),
+  ]);
+  return paginatedResponse(items, total, page, limit);
+  // → { items, total, page, limit, totalPages, hasNext, hasPrev }
+};
+```
+
+## Index sync at startup
+
+`ensureIndexes()` runs on boot so the indexes declared on your schemas are guaranteed to
+exist — a missing index never silently degrades production performance.
+
+## Security defaults
+
+Generated apps ship with `helmet` security headers, a configurable CORS middleware, cookie
+parsing and session handling already wired into `server.ts`.

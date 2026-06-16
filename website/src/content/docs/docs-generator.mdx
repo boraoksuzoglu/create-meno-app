@@ -1,0 +1,70 @@
+---
+title: Docs generator
+description: Generate Markdown API documentation that is derived from your code — request bodies from Joi, responses from the controller chain — and can never drift.
+---
+
+The Markdown docs generator turns your code into documentation. Run it and it writes a `docs/`
+tree describing every module and model — request bodies, query params and responses included.
+
+```bash
+npm run docs
+```
+
+## How it works
+
+A single introspection engine — `src/utils/doc-introspect.ts` — does the reading:
+
+1. **Scans** `src/modules/` and `src/models/`.
+2. **Derives request bodies** from your Joi schemas (`validateBody` / `validateQuery`).
+3. **Infers responses** by tracing the controller → service → model chain.
+4. **Reads Mongoose schemas** for fields, enums, `ref`s and indexes.
+
+Because the documentation is *derived*, it stays accurate as your code changes — there's no
+second source of truth to forget to update.
+
+## Annotations
+
+Most routes need only one annotation to be documented:
+
+```ts
+// @doc Create example | 201
+// @desc Creates a new example and returns it.
+router.post('/', validateBody(createExampleSchema), ctrl.create);
+```
+
+| Annotation | Purpose |
+| --- | --- |
+| `// @doc <summary> \| <status>` | Include the route; sets summary and status code |
+| `// @desc <text>` | Longer description |
+| `// @body <json>` | Override the inferred request body *(rare)* |
+| `// @query <text>` | Override the inferred query params *(rare)* |
+| `// @response <code> <json>` | Override the inferred response *(rare)* |
+
+`@doc` and `@desc` are the only annotations you'll reach for routinely — the body, query and
+response overrides exist for the occasional case the engine can't infer.
+
+## Output
+
+```text
+docs/
+├── README.md
+├── MODULES.md
+├── MODELS.md
+├── modules/   # one page per module
+└── models/    # one page per model
+```
+
+## Keep docs honest in CI
+
+```bash
+npm run docs -- --check
+```
+
+The `--check` flag regenerates docs in memory and **fails** if the committed `docs/` is out
+of date — so stale documentation can't be merged. Wire it into your
+[GitHub Actions](/docs/docker-ci) pipeline.
+
+<Callout type="tip" title="One engine, two outputs">
+The same `doc-introspect` engine powers both this Markdown generator and the
+[Swagger UI](/docs/swagger). They read the same source, so they can never disagree.
+</Callout>

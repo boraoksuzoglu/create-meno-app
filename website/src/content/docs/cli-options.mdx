@@ -1,0 +1,121 @@
+---
+title: CLI options
+description: Every interactive prompt create-meno-app asks and exactly what each one toggles in the generated project.
+---
+
+The CLI is fully interactive — run it and answer the prompts. There are no flags to memorize;
+each answer flips a feature on or off and the generator renders only the files you need.
+
+```bash
+npx create-meno-app my-api
+```
+
+## Project basics
+
+### Language
+
+Choose **TypeScript** or **JavaScript (ESM)**. This determines the file extensions
+(`.ts` / `.js`), whether a `tsconfig.json` is generated, and which dev tooling is wired up
+(`tsx`, `@types/*`, `@swc/jest` for tests).
+
+## Authentication
+
+### Include Auth module?
+
+Generates a complete auth module mounted at `/auth`: register, login, logout, forgot /
+reset password and change password. Adds the `User` model, session middleware
+(`express-session` + `connect-mongo`), bcrypt hashing and a `create:admin` script. See
+[Auth & RBAC](/docs/auth-rbac).
+
+### Include RBAC?
+
+*(Only when auth is enabled.)* Adds role-and-permission middleware so you can guard routes
+by role.
+
+## Core features
+
+### Rate limiting?
+
+Adds request rate-limiting middleware. You then choose a **store**:
+
+- **In-memory** — simplest, but not safe across multiple instances. Good for dev.
+- **MongoDB** — shared across instances using your existing database. Recommended for production.
+- **Redis** — fast, distributed; requires a Redis server.
+
+See [Rate limiting](/docs/rate-limiting).
+
+### Winston logger with daily rotation?
+
+Adds a structured Winston logger with daily-rotating log files. See [Logging](/docs/logging).
+
+## File upload
+
+### Include file upload?
+
+Adds upload handling. Choose a **provider**:
+
+- **Local disk (Multer)** — writes to disk; great for development.
+- **Google Cloud Storage** — production-grade, with a signed-URL cache for downloads.
+
+See [File upload](/docs/file-upload).
+
+## Email
+
+### Gmail API email service?
+
+Adds an email service built on the Gmail API with Handlebars templates (welcome,
+forgot-password, password-changed).
+
+### Multi-language email templates?
+
+*(Only when email is enabled.)* Adds English **and** Turkish (`en` + `tr`) locale files for
+email copy. See [Email](/docs/email).
+
+## Testing & quality
+
+### Jest test setup?
+
+Adds Jest, `supertest` and `mongodb-memory-server` for fast, isolated integration tests —
+plus an example auth test suite. See [Testing](/docs/testing).
+
+### ESLint + Prettier?
+
+Adds an ESLint flat config, Prettier, Husky and lint-staged with a pre-commit hook. See
+[Code quality](/docs/code-quality).
+
+## DevOps & docs
+
+### Swagger / OpenAPI docs?
+
+Serves an interactive Swagger UI at `GET /docs` in development. See [Swagger](/docs/swagger).
+
+### Markdown docs generator?
+
+Adds `npm run docs`, which writes Markdown API documentation to `docs/`. See
+[Docs generator](/docs/docs-generator).
+
+### Docker setup?
+
+Adds a `Dockerfile`, `docker-compose.yml` (with MongoDB) and `.dockerignore`, with a
+configured `HEALTHCHECK`. See [Docker & CI](/docs/docker-ci).
+
+### GitHub Actions CI?
+
+Adds a CI workflow (lint → test → build → docs check) and a Dependabot config.
+
+## AI context files
+
+A multi-select for which AI assistant context files to generate:
+
+- **Claude** → `CLAUDE.md`
+- **Cursor** → `.cursor/rules/project.mdc`
+- **Kiro** → `.kiro/steering/project.md`
+
+Each explains the stack, the non-negotiable conventions and the module pattern so an agent
+can extend the project correctly. See [AI-friendly](/docs/ai-context).
+
+<Callout type="tip">
+Not sure what to pick? The defaults shown in the CLI produce a well-rounded, production-ready
+TypeScript backend. You can always add a feature later by generating a fresh project and
+copying the pieces you want — the structure is identical.
+</Callout>

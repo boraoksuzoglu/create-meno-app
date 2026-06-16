@@ -1,0 +1,40 @@
+---
+title: File upload
+description: File upload handling with a choice of local disk (Multer) or Google Cloud Storage with a signed-URL cache.
+---
+
+Enabling uploads generates `src/utils/upload.ts` and the middleware to accept files. You pick
+a provider at setup time.
+
+## Local disk (Multer)
+
+Writes uploaded files to disk using **Multer**. Simple and dependency-light — ideal for
+development and small, single-instance deployments.
+
+```ts
+import { upload } from '@/utils/upload.js';
+
+router.post('/avatar', upload.single('file'), ctrl.setAvatar);
+```
+
+## Google Cloud Storage
+
+Uploads to a **GCS** bucket, with a **signed-URL cache** for serving downloads efficiently.
+This is the production-grade option: object storage scales independently of your app servers
+and works across multiple instances.
+
+Configure your bucket and credentials through the
+[config module](/docs/architecture#validated-config) via `.env`.
+
+## Choosing
+
+| | Local disk | Google Cloud Storage |
+| --- | --- | --- |
+| Best for | Dev, small apps | Production, scale |
+| Multi-instance safe | No | Yes |
+| External dependency | None | GCS bucket + credentials |
+
+<Callout type="tip">
+Start on local disk in development and switch to GCS for production — the upload call sites in
+your controllers stay the same; only the provider configuration changes.
+</Callout>
