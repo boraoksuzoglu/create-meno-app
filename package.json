@@ -4,7 +4,7 @@
   "description": "CLI tool to scaffold a production-ready MENO (MongoDB, Express, Node.js) boilerplate",
   "type": "module",
   "bin": {
-    "create-meno-app": "./bin/create-meno-app.js"
+    "create-meno-app": "bin/create-meno-app.js"
   },
   "files": [
     "assets/",
