@@ -101,3 +101,47 @@ model chain; `@doc`/`@desc` are the only routine annotations, with `@body`/`@que
 as overrides. The shared engine `src/utils/doc-introspect.<ext>` (emitted when Swagger OR the
 docs generator is enabled) powers **both** the docs generator and the Swagger util, so they
 never drift. Models are read from the Mongoose schema (fields, enums, `ref`, indexes).
+
+## Website (marketing + docs site)
+
+A separate **Next.js app lives in `website/`** (Next 16 · React 19 · Tailwind v4 · MDX),
+deployed to Vercel at `meno.borao.dev`. It is **not** covered by the CLI's `npm test` /
+`npm run lint` — it has its own toolchain and is built independently:
+
+```bash
+cd website
+npm install
+npm run dev        # local dev server
+npm run build      # production build (also the CI / Vercel build)
+```
+
+Docs are MDX under `website/src/content/docs/`; navigation lives in `website/src/lib/nav.ts`;
+`llms.txt` / `llms-full.txt` / `sitemap.xml` / `robots.txt` and each page's `/docs/<slug>/md`
+are generated from those — **no manual step** when you add a page to `nav.ts`.
+
+**Golden rule: the website documents the _generated project_, so it must track CLI features.**
+When you add, remove or change a feature, a prompt, or a generated file, update the site **in
+the same PR**:
+
+- The relevant page(s) in `website/src/content/docs/*.mdx` — and for a brand-new feature, add
+  a page plus an entry in `website/src/lib/nav.ts`.
+- `website/src/components/landing/ConfigBuilder.tsx` — the `Config` type, `DEFAULTS`,
+  `buildTree()` (the conditional files shown in the preview) and `answers()`, if a prompt or a
+  generated file changed.
+- `website/src/components/landing/TerminalAnimation.tsx` (`PROMPTS`, and the **version** shown
+  in the banner) and `FeatureMatrix.tsx`, if the prompt set or feature list changed.
+
+## Adding or changing a generated feature — checklist
+
+A single feature usually spans several layers; change them together so nothing drifts:
+
+1. **Prompt** — add/adjust the question in `lib/create-app.js` and the resulting `config` flag
+   (mirror it in the `generate` flow if relevant).
+2. **Manifest + templates** — add `{ template, dest, when }` entries in `lib/engine/manifest.js`
+   and create the template(s) under `templates/` (`common/`, or mirrored `js/` + `ts/`).
+3. **Dependencies** — wire new packages in `lib/generators/package-json.js`, with a coherent
+   **fallback** version (npx users only get `optionalDependencies` live; devDeps fall back —
+   see Critical gotchas).
+4. **Tests** — extend the matrix in `test/configs.mjs` so the new combination is generated and
+   syntax-checked by `npm test`.
+5. **Docs** — update `README.md` **and** the website (see the Website section above).
